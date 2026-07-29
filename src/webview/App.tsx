@@ -48,6 +48,7 @@ function App() {
   useEffect(() => {
     const handler = (event: MessageEvent) => {
       const msg = event.data
+      console.log('[Webview] message received:', msg.command, msg)
       if (msg.command === 'stateUpdate') {
         const timerState: TimerState = msg
         setState(timerState)

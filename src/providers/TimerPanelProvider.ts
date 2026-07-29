@@ -24,8 +24,10 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this.getWebviewHtml(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage((message) => {
+      console.log('[Provider] received:', message.command);
       switch (message.command) {
         case 'start':
+          console.log('[Provider] start, task:', message.task);
           this.timer.start(message.task);
           break;
         case 'pause':
@@ -62,25 +64,33 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
 
   private postState() {
     if (!this.webviewView) return;
-    const state = this.timer.getState();
-    this.webviewView.webview.postMessage({ command: 'stateUpdate', ...state });
+    try {
+      const state = this.timer.getState();
+      this.webviewView.webview.postMessage({ command: 'stateUpdate', ...state });
+    } catch {
+      // Webview disposed — ignore
+    }
   }
 
   private postSettings() {
     if (!this.webviewView) return;
-    const config = vscode.workspace.getConfiguration('cut-a-while');
-    this.webviewView.webview.postMessage({
-      command: 'settingsUpdate',
-      settings: {
-        workDuration: config.get<number>('workDuration', 1),
-        breakDuration: config.get<number>('breakDuration', 0.25),
-        longBreakDuration: config.get<number>('longBreakDuration', 1),
-        longBreakInterval: config.get<number>('longBreakInterval', 4),
-        autoStart: config.get<boolean>('autoStart', true),
-        soundEnabled: config.get<boolean>('sound.enabled', true),
-        accent: config.get<string>('theme.accent', 'blue'),
-      },
-    });
+    try {
+      const config = vscode.workspace.getConfiguration('cut-a-while');
+      this.webviewView.webview.postMessage({
+        command: 'settingsUpdate',
+        settings: {
+          workDuration: config.get<number>('workDuration', 1),
+          breakDuration: config.get<number>('breakDuration', 0.25),
+          longBreakDuration: config.get<number>('longBreakDuration', 1),
+          longBreakInterval: config.get<number>('longBreakInterval', 4),
+          autoStart: config.get<boolean>('autoStart', true),
+          soundEnabled: config.get<boolean>('sound.enabled', true),
+          accent: config.get<string>('theme.accent', 'blue'),
+        },
+      });
+    } catch {
+      // Webview disposed — ignore
+    }
   }
 
   private async updateSetting(key: string, value: unknown) {
@@ -111,30 +121,18 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(assetsPath, 'assets', 'index.css'),
     );
 
-    const nonce = getNonce();
-
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};">
   <link rel="stylesheet" href="${styleUri}">
   <title>Cut a While</title>
 </head>
 <body>
   <div id="root"></div>
-  <script nonce="${nonce}" src="${scriptUri}"></script>
+  <script type="module" src="${scriptUri}"></script>
 </body>
 </html>`;
   }
-}
-
-function getNonce(): string {
-  let text = '';
-  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  for (let i = 0; i < 64; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
 }

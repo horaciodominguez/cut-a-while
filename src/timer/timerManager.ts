@@ -15,30 +15,26 @@ export interface TimerState {
 
 export class TimerManager implements vscode.Disposable {
   private state: TimerState;
-  private intervalId: ReturnType<typeof setInterval> | null = null;
+  private tickTimer: ReturnType<typeof setTimeout> | null = null;
   private storage: StorageManager;
   private _onDidChangeState = new vscode.EventEmitter<TimerState>();
   readonly onDidChangeState: vscode.Event<TimerState> = this._onDidChangeState.event;
 
   constructor(storage: StorageManager) {
     this.storage = storage;
-    this.state = this.loadState();
+    this.state = this.getDefaultState();
   }
 
-  private loadState(): TimerState {
+  private getDefaultState(): TimerState {
     const config = this.getConfig();
-    return this.storage.get('timerState', {
+    return {
       status: 'idle',
       timeLeft: config.workDuration,
       totalTime: config.workDuration,
       cycleType: 'work',
       completedSessions: 0,
       currentTask: '',
-    });
-  }
-
-  private async saveState() {
-    await this.storage.set('timerState', this.state).catch(() => {});
+    };
   }
 
   private getConfig() {
@@ -63,7 +59,7 @@ export class TimerManager implements vscode.Disposable {
       this.state.currentTask = task;
     }
 
-    if (this.state.status === 'idle' || this.state.status === 'stopped') {
+    if (this.state.status === 'idle' || this.state.status === 'stopped' || this.state.status === 'break') {
       const config = this.getConfig();
       this.state.timeLeft = config.workDuration;
       this.state.totalTime = config.workDuration;
@@ -126,6 +122,29 @@ export class TimerManager implements vscode.Disposable {
     this.emit();
   }
 
+  private startTick() {
+    this.stopTick();
+    this.tick();
+  }
+
+  private tick() {
+    if (this.state.status !== 'running' && this.state.status !== 'break') return;
+    this.state.timeLeft--;
+    if (this.state.timeLeft <= 0) {
+      this.handleCompletion().catch(() => {});
+      return;
+    }
+    this.emit();
+    this.tickTimer = setTimeout(() => this.tick(), 1000);
+  }
+
+  private stopTick() {
+    if (this.tickTimer !== null) {
+      clearTimeout(this.tickTimer);
+      this.tickTimer = null;
+    }
+  }
+
   private async handleCompletion() {
     this.stopTick();
     this.state.completedSessions++;
@@ -166,28 +185,12 @@ export class TimerManager implements vscode.Disposable {
     }
   }
 
-  private startTick() {
-    this.stopTick();
-    this.intervalId = setInterval(() => {
-      this.state.timeLeft--;
-      if (this.state.timeLeft <= 0) {
-        this.handleCompletion().catch(() => {});
-        return;
-      }
-      this.emit();
-    }, 1000);
-  }
-
-  private stopTick() {
-    if (this.intervalId !== null) {
-      clearInterval(this.intervalId);
-      this.intervalId = null;
-    }
-  }
-
   private emit() {
     this._onDidChangeState.fire({ ...this.state });
-    this.saveState();
+  }
+
+  private async saveState() {
+    await this.storage.set('timerState', this.state).catch(() => {});
   }
 
   dispose() {
