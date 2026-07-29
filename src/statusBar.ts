@@ -83,9 +83,10 @@ export class StatusBarManager implements vscode.Disposable {
 
     const sessions = state.completedSessions;
     const cycleLabel = state.cycleType === 'work' ? 'Focus' : 'Break';
-    const nextLongBreak = sessions > 0 && sessions % 4 === 0
+    const longBreakInterval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
+    const nextLongBreak = sessions > 0 && sessions % longBreakInterval === 0
       ? 'Long break now!'
-      : `${4 - (sessions % 4)} sessions until long break`;
+      : `${longBreakInterval - (sessions % longBreakInterval)} sessions until long break`;
 
     this.item.tooltip =
       `Cut a While — ${cycleLabel}\n` +

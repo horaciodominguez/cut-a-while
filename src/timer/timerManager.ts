@@ -147,19 +147,19 @@ export class TimerManager implements vscode.Disposable {
 
   private async handleCompletion() {
     this.stopTick();
-    this.state.completedSessions++;
 
     const config = this.getConfig();
     const session = {
       timestamp: Date.now(),
       type: this.state.cycleType,
-      duration: config.workDuration,
+      duration: this.state.totalTime,
       task: this.state.currentTask,
     };
     await this.storage.pushToArray('sessions', session).catch(() => {});
     await this.saveState();
 
     if (this.state.cycleType === 'work') {
+      this.state.completedSessions++;
       const isLongBreak = this.state.completedSessions % config.longBreakInterval === 0;
       this.state.timeLeft = isLongBreak ? config.longBreakDuration : config.breakDuration;
       this.state.totalTime = this.state.timeLeft;
@@ -175,6 +175,7 @@ export class TimerManager implements vscode.Disposable {
     this.state.totalTime = config.workDuration;
     this.state.cycleType = 'work';
     this.state.currentTask = '';
+    this.state.status = 'idle';
     this.emit();
 
     if (config.autoStart) {

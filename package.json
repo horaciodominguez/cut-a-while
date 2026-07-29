@@ -4,6 +4,7 @@
   "description": "Pomodoro timer for VS Code — stay focused, track your flow",
   "version": "0.1.0",
   "publisher": "hord17",
+  "icon": "src/assets/icons/container.svg",
   "private": true,
   "type": "module",
   "engines": {
@@ -101,13 +102,6 @@
           "default": true,
           "description": "Play sound when a cycle completes"
         },
-        "cut-a-while.sound.volume": {
-          "type": "number",
-          "default": 0.5,
-          "minimum": 0,
-          "maximum": 1,
-          "description": "Volume for completion sound (0-1)"
-        },
         "cut-a-while.statusBarAlignment": {
           "type": "string",
           "default": "right",
@@ -129,11 +123,6 @@
             "teal"
           ],
           "description": "Accent color for the timer ring and UI"
-        },
-        "cut-a-while.zenMode": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable Zen mode on focus start (hides sidebar, panels)"
         }
       }
     }

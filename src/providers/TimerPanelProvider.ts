@@ -54,6 +54,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'updateSetting':
           this.updateSetting(message.key, message.value);
           break;
+        case 'skipBreak':
+          this.timer.skipBreak();
+          break;
       }
     });
 

@@ -9,6 +9,7 @@ import { RippleButton } from './components/RippleButton.tsx'
 import { SessionDots } from './components/SessionDots.tsx'
 import { IconPlay, IconPause, IconStop, IconReset, IconSkip } from './components/Icons.tsx'
 import { useConfetti } from './hooks/useConfetti.ts'
+import { useSound } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
@@ -43,7 +44,11 @@ function App() {
   })
   const [task, setTask] = useState('')
   const prevCompletedRef = useRef(state.completedSessions)
+  const prevCycleRef = useRef(state.cycleType)
+  const firstStateRef = useRef(true)
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const fireConfetti = useConfetti()
+  const { playWorkComplete, playBreakComplete } = useSound(soundEnabled)
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -54,18 +59,33 @@ function App() {
         setState(timerState)
         setVsCodeState(timerState)
       }
+      if (msg.command === 'settingsUpdate') {
+        setSoundEnabled(msg.settings.soundEnabled)
+      }
     }
     window.addEventListener('message', handler)
     postMessage({ command: 'getState' })
+    postMessage({ command: 'getSettings' })
     return () => window.removeEventListener('message', handler)
   }, [])
 
   useEffect(() => {
+    if (firstStateRef.current) {
+      firstStateRef.current = false
+      prevCompletedRef.current = state.completedSessions
+      prevCycleRef.current = state.cycleType
+      return
+    }
     if (state.completedSessions > prevCompletedRef.current) {
       fireConfetti(state.completedSessions % 4 === 0)
+      playWorkComplete()
+    }
+    if (prevCycleRef.current === 'break' && state.cycleType === 'work') {
+      playBreakComplete()
     }
     prevCompletedRef.current = state.completedSessions
-  }, [state.completedSessions, fireConfetti])
+    prevCycleRef.current = state.cycleType
+  }, [state.completedSessions, fireConfetti, state.cycleType, playWorkComplete, playBreakComplete])
 
   const send = useCallback((command: string, payload?: Record<string, unknown>) => {
     postMessage({ command, ...payload })

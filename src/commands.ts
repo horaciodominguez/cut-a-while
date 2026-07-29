@@ -18,6 +18,9 @@ export class CommandsManager {
       } else if (state.status === 'paused' || state.status === 'idle') {
         this.timer.start();
         Notifications.info('Focus time!');
+      } else if (state.status === 'break') {
+        this.timer.skipBreak();
+        Notifications.info('Break skipped');
       }
     });
 
