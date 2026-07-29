@@ -9,6 +9,7 @@ import { RippleButton } from './components/RippleButton.tsx'
 import { SessionDots } from './components/SessionDots.tsx'
 import { IconPlay, IconPause, IconStop, IconReset, IconSkip } from './components/Icons.tsx'
 import { useConfetti } from './hooks/useConfetti.ts'
+import { SettingsPanel } from './components/SettingsPanel.tsx'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
 
@@ -21,15 +22,7 @@ interface TimerState {
   currentTask: string
 }
 
-declare global {
-  function acquireVsCodeApi(): {
-    postMessage: (msg: unknown) => void
-    getState: () => unknown
-    setState: (state: unknown) => void
-  }
-}
-
-const vscode = acquireVsCodeApi()
+import { postMessage, setVsCodeState } from './vscodeApi.ts'
 
 const STATUS_LABELS: Record<TimerStatus, string> = {
   idle: 'Ready',
@@ -58,11 +51,11 @@ function App() {
       if (msg.command === 'stateUpdate') {
         const timerState: TimerState = msg
         setState(timerState)
-        vscode.setState(timerState)
+        setVsCodeState(timerState)
       }
     }
     window.addEventListener('message', handler)
-    vscode.postMessage({ command: 'getState' })
+    postMessage({ command: 'getState' })
     return () => window.removeEventListener('message', handler)
   }, [])
 
@@ -74,7 +67,7 @@ function App() {
   }, [state.completedSessions, fireConfetti])
 
   const send = useCallback((command: string, payload?: Record<string, unknown>) => {
-    vscode.postMessage({ command, ...payload })
+    postMessage({ command, ...payload })
   }, [])
 
   const handleStart = () => {
@@ -97,6 +90,7 @@ function App() {
   return (
     <>
       <AnimatedBackground isBreak={isBreak} />
+      <SettingsPanel />
 
       <div className="flex flex-col items-center min-h-screen px-4 py-6 select-none">
         <GlassCard className="w-full max-w-xs p-6 sm:p-8">
