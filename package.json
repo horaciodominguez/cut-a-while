@@ -1,0 +1,157 @@
+{
+  "name": "cut-a-while",
+  "displayName": "Cut a While",
+  "description": "Pomodoro timer for VS Code — stay focused, track your flow",
+  "version": "0.1.0",
+  "publisher": "hord17",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "vscode": "^1.98.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "icon": "src/assets/icons/logo.png",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cut-a-while.showPanel",
+        "title": "Cut a While: Show Timer Panel"
+      },
+      {
+        "command": "cut-a-while.toggle",
+        "title": "Cut a While: Start / Pause Timer"
+      },
+      {
+        "command": "cut-a-while.reset",
+        "title": "Cut a While: Reset Timer"
+      },
+      {
+        "command": "cut-a-while.stats",
+        "title": "Cut a While: Show Statistics"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "cut-a-while.toggle",
+        "key": "ctrl+shift+t",
+        "when": "!textInputFocus"
+      }
+    ],
+    "configuration": {
+      "title": "Cut a While",
+      "properties": {
+        "cut-a-while.workDuration": {
+          "type": "number",
+          "default": 25,
+          "minimum": 1,
+          "maximum": 180,
+          "description": "Work session duration in minutes"
+        },
+        "cut-a-while.breakDuration": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Short break duration in minutes"
+        },
+        "cut-a-while.longBreakDuration": {
+          "type": "number",
+          "default": 15,
+          "minimum": 1,
+          "maximum": 120,
+          "description": "Long break duration in minutes"
+        },
+        "cut-a-while.longBreakInterval": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Number of work sessions before a long break"
+        },
+        "cut-a-while.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically start the next cycle when the current one ends"
+        },
+        "cut-a-while.sound.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play sound when a cycle completes"
+        },
+        "cut-a-while.sound.volume": {
+          "type": "number",
+          "default": 0.5,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Volume for completion sound (0-1)"
+        },
+        "cut-a-while.statusBarAlignment": {
+          "type": "string",
+          "default": "right",
+          "enum": [
+            "left",
+            "right"
+          ],
+          "description": "Alignment of the timer in the status bar"
+        },
+        "cut-a-while.theme.accent": {
+          "type": "string",
+          "default": "blue",
+          "enum": [
+            "blue",
+            "purple",
+            "green",
+            "pink",
+            "orange",
+            "teal"
+          ],
+          "description": "Accent color for the timer ring and UI"
+        },
+        "cut-a-while.zenMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Zen mode on focus start (hides sidebar, panels)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p tsconfig.extension.json",
+    "watch": "tsc -watch -p tsconfig.extension.json",
+    "build:webview": "vite build",
+    "build": "npm run compile && npm run build:webview",
+    "dev": "concurrently \"npm run watch\" \"npm run build:webview -- --watch\"",
+    "package": "npx vsce package",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.1.12",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "tailwindcss": "^4.1.12"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@types/vscode": "^1.125.0",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "concurrently": "^10.0.4",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2",
+    "vsce": "^2.15.0"
+  }
+}
