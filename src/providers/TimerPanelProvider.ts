@@ -49,7 +49,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       }
     });
 
-    this.timer.onDidChangeState(() => this.postState());
+    const disposable = this.timer.onDidChangeState(() => this.postState());
+    webviewView.onDidDispose(() => disposable.dispose());
     this.postState();
   }
 

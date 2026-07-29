@@ -129,7 +129,8 @@
     "dev": "concurrently \"npm run watch\" \"npm run build:webview -- --watch\"",
     "package": "npx vsce package",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
@@ -152,6 +153,7 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
+    "vitest": "^4.1.10",
     "vsce": "^2.15.0"
   }
 }

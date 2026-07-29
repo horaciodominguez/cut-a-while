@@ -16,28 +16,28 @@ export class StorageManager {
     return this.globalState.get<T>(`cut-a-while.${key}`, defaultValue);
   }
 
-  set<T>(key: string, value: T): void {
-    this.globalState.update(`cut-a-while.${key}`, value);
+  async set<T>(key: string, value: T): Promise<void> {
+    await this.globalState.update(`cut-a-while.${key}`, value);
   }
 
   getWorkspace<T>(key: string, defaultValue: T): T {
     return this.workspaceState.get<T>(`cut-a-while.${key}`, defaultValue);
   }
 
-  setWorkspace<T>(key: string, value: T): void {
-    this.workspaceState.update(`cut-a-while.${key}`, value);
+  async setWorkspace<T>(key: string, value: T): Promise<void> {
+    await this.workspaceState.update(`cut-a-while.${key}`, value);
   }
 
-  pushToArray<T>(key: string, value: T): void {
+  async pushToArray<T>(key: string, value: T): Promise<void> {
     const arr = this.get<T[]>(key, []);
     arr.push(value);
-    this.set(key, arr);
+    await this.set(key, arr);
   }
 
-  private migrate(): void {
+  private async migrate(): Promise<void> {
     const version = this.get<number>('schemaVersion', 0);
     if (version < STORAGE_VERSION) {
-      this.set('schemaVersion', STORAGE_VERSION);
+      await this.set('schemaVersion', STORAGE_VERSION);
     }
   }
 }

@@ -30,9 +30,9 @@ const STATUS_LABELS: Record<TimerStatus, string> = {
   break: 'Break',
 }
 
-const CYCLE_COLORS: Record<CycleType, string> = {
-  work: 'from-blue-500 via-cyan-400 to-blue-300',
-  break: 'from-emerald-500 via-green-400 to-emerald-300',
+const CYCLE_COLORS: Record<CycleType, { from: string; to: string }> = {
+  work: { from: '#3b82f6', to: '#06b6d4' },
+  break: { from: '#10b981', to: '#34d399' },
 }
 
 function App() {
@@ -49,8 +49,8 @@ function App() {
     const handler = (event: MessageEvent) => {
       const msg = event.data
       if (msg.command === 'stateUpdate') {
-        const { command, ...timerState } = msg as { command: string } & TimerState
-        setState(timerState as TimerState)
+        const timerState: TimerState = msg
+        setState(timerState)
         vscode.setState(timerState)
       }
     }
@@ -64,6 +64,11 @@ function App() {
   }, [])
 
   const handleStart = () => {
+    if (state.status === 'break') {
+      send('skipBreak')
+      setTask('')
+      return
+    }
     const t = task.trim()
     if (t) {
       send('setTask', { task: t })
@@ -71,9 +76,8 @@ function App() {
     send('start', { task: t || undefined })
   }
 
-  const progress = state.cycleType === 'work'
-    ? state.timeLeft / (25 * 60)
-    : state.timeLeft / (5 * 60)
+  const totalTime = state.cycleType === 'work' ? 25 * 60 : 5 * 60
+  const progress = state.timeLeft / totalTime
 
   const circumference = 2 * Math.PI * 120
   const offset = circumference * (1 - Math.min(Math.max(progress, 0), 1))
@@ -103,8 +107,8 @@ function App() {
           />
           <defs>
             <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="currentColor" className="text-blue-500" />
-              <stop offset="100%" stopColor="currentColor" className="text-cyan-400" />
+              <stop offset="0%" stopColor={CYCLE_COLORS[state.cycleType].from} />
+              <stop offset="100%" stopColor={CYCLE_COLORS[state.cycleType].to} />
             </linearGradient>
           </defs>
         </svg>
@@ -153,7 +157,7 @@ function App() {
             <ControlButton icon="▶" label="Resume" onClick={() => send('resume')} primary />
           )}
           {state.status === 'break' && (
-            <ControlButton icon="▶" label="Skip Break" onClick={handleStart} primary />
+            <ControlButton icon="⏭" label="Skip Break" onClick={handleStart} primary />
           )}
           {(state.status === 'running' || state.status === 'paused') && (
             <ControlButton icon="⏹" label="Stop" onClick={() => send('stop')} secondary />

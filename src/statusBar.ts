@@ -17,25 +17,51 @@ const STATE_COLORS: Record<string, string> = {
   stopped: '#ef5350',
 };
 
+const PRIORITY = 100;
+
 export class StatusBarManager implements vscode.Disposable {
   private item: vscode.StatusBarItem;
   private timer: TimerManager;
-  private disposable: vscode.Disposable;
+  private stateDisposable: vscode.Disposable;
+  private currentAlignment: string = 'right';
 
   constructor(timer: TimerManager) {
     this.timer = timer;
-    this.item = vscode.window.createStatusBarItem(
-      vscode.StatusBarAlignment.Right,
-      100,
-    );
-    this.item.command = 'cut-a-while.showPanel';
-    this.item.tooltip = 'Cut a While — Pomodoro Timer';
-    this.item.text = '$(watch) 25:00';
+    this.item = this.createItem(vscode.StatusBarAlignment.Right);
+    this.stateDisposable = timer.onDidChangeState((state) => this.update(state));
 
-    this.disposable = timer.onDidChangeState((state) => this.update(state));
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('cut-a-while.statusBarAlignment')) {
+        this.applyAlignment();
+      }
+    });
   }
 
   init() {
+    this.item.show();
+    this.update(this.timer.getState());
+  }
+
+  private createItem(alignment: vscode.StatusBarAlignment): vscode.StatusBarItem {
+    const item = vscode.window.createStatusBarItem(alignment, PRIORITY);
+    item.command = 'cut-a-while.showPanel';
+    item.text = '$(watch) 25:00';
+    item.tooltip = 'Cut a While — Pomodoro Timer';
+    return item;
+  }
+
+  private applyAlignment() {
+    const config = vscode.workspace.getConfiguration('cut-a-while');
+    const align = config.get<string>('statusBarAlignment', 'right');
+    if (align === this.currentAlignment) return;
+
+    this.currentAlignment = align;
+    const alignment = align === 'left'
+      ? vscode.StatusBarAlignment.Left
+      : vscode.StatusBarAlignment.Right;
+
+    this.item.dispose();
+    this.item = this.createItem(alignment);
     this.item.show();
     this.update(this.timer.getState());
   }
@@ -46,30 +72,23 @@ export class StatusBarManager implements vscode.Disposable {
     const color = STATE_COLORS[state.status] || '';
 
     this.item.text = `${icon} ${timeFormatted}`;
-    this.item.backgroundColor = color ? new vscode.ThemeColor('statusBarItem.prominentBackground') : undefined;
     this.item.color = color || undefined;
+    this.item.backgroundColor = color
+      ? new vscode.ThemeColor('statusBarItem.prominentBackground')
+      : undefined;
 
     const sessions = state.completedSessions;
     const cycleLabel = state.cycleType === 'work' ? 'Focus' : 'Break';
+    const nextLongBreak = sessions > 0 && sessions % 4 === 0
+      ? 'Long break now!'
+      : `${4 - (sessions % 4)} sessions until long break`;
+
     this.item.tooltip =
       `Cut a While — ${cycleLabel}\n` +
       `${timeFormatted} remaining\n` +
       `Completed: ${sessions} pomodoro${sessions !== 1 ? 's' : ''}\n` +
-      `${sessions % 4 === 0 && sessions > 0 ? 'Long break upcoming!' : `${4 - (sessions % 4)} sessions until long break`}\n` +
+      `${nextLongBreak}\n` +
       `---\nClick to open panel`;
-
-    this.updateAlignment();
-  }
-
-  private updateAlignment() {
-    const config = vscode.workspace.getConfiguration('cut-a-while');
-    const align = config.get<string>('statusBarAlignment', 'right');
-    if (align === 'left' && this.item.alignment !== vscode.StatusBarAlignment.Left) {
-      this.item.dispose();
-      this.item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-      this.item.command = 'cut-a-while.showPanel';
-      this.item.show();
-    }
   }
 
   private formatTime(seconds: number): string {
@@ -79,7 +98,7 @@ export class StatusBarManager implements vscode.Disposable {
   }
 
   dispose() {
-    this.disposable.dispose();
+    this.stateDisposable.dispose();
     this.item.dispose();
   }
 }

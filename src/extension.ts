@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
   const statusBar = new StatusBarManager(timer);
   statusBar.init();
 
-  const commands = new CommandsManager(timer, statusBar);
+  const commands = new CommandsManager(timer);
   commands.register(context);
 
   const provider = new TimerPanelProvider(context.extensionUri, timer);

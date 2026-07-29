@@ -1,12 +1,11 @@
 import * as vscode from 'vscode';
 import { TimerManager } from './timer/timerManager.js';
-import { StatusBarManager } from './statusBar.js';
 import { Notifications } from './notifications.js';
 
 export class CommandsManager {
   private timer: TimerManager;
 
-  constructor(timer: TimerManager, _statusBar: StatusBarManager) {
+  constructor(timer: TimerManager) {
     this.timer = timer;
   }
 
