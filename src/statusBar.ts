@@ -24,6 +24,7 @@ export class StatusBarManager implements vscode.Disposable {
   private item: vscode.StatusBarItem;
   private timer: TimerManager;
   private stateDisposable: vscode.Disposable;
+  private configDisposable: vscode.Disposable;
   private currentAlignment: string = 'right';
   private glowInterval: ReturnType<typeof setInterval> | null = null;
   private glowPhase = false;
@@ -33,7 +34,7 @@ export class StatusBarManager implements vscode.Disposable {
     this.item = this.createItem(vscode.StatusBarAlignment.Right);
     this.stateDisposable = timer.onDidChangeState((state) => this.update(state));
 
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    this.configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('cut-a-while.statusBarAlignment')) {
         this.applyAlignment();
       }
@@ -48,7 +49,7 @@ export class StatusBarManager implements vscode.Disposable {
   private createItem(alignment: vscode.StatusBarAlignment): vscode.StatusBarItem {
     const item = vscode.window.createStatusBarItem(alignment, PRIORITY);
     item.command = 'cut-a-while.showPanel';
-    item.text = '$(watch) 25:00';
+    item.text = '$(watch) 00:00';
     item.tooltip = 'Cut a While — Pomodoro Timer';
     return item;
   }
@@ -107,8 +108,8 @@ export class StatusBarManager implements vscode.Disposable {
     this.glowInterval = setInterval(() => {
       this.glowPhase = !this.glowPhase;
       this.item.backgroundColor = this.glowPhase
-        ? new vscode.ThemeColor('statusBarItem.errorBackground')
-        : new vscode.ThemeColor('statusBarItem.prominentBackground');
+        ? new vscode.ThemeColor('statusBarItem.prominentBackground')
+        : undefined;
     }, GLOW_INTERVAL_MS);
   }
 
@@ -129,6 +130,7 @@ export class StatusBarManager implements vscode.Disposable {
   dispose() {
     this.stopGlow();
     this.stateDisposable.dispose();
+    this.configDisposable.dispose();
     this.item.dispose();
   }
 }

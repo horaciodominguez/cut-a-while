@@ -7,14 +7,6 @@
 }
 
 :root {
-  --brand-primary: #3b82f6;
-  --brand-secondary: #06b6d4;
-  --brand-accent: #6366f1;
-  --brand-break: #10b981;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-shadow: rgba(0, 0, 0, 0.20);
-
   font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
   font-size: 14px;
   line-height: 1.5;

@@ -9,12 +9,12 @@ interface TimerRingProps {
 
 const WORK_COLORS = ['#3b82f6', '#06b6d4', '#6366f1']
 const BREAK_COLORS = ['#10b981', '#34d399', '#059669']
+const SVG_CIRCUMFERENCE = 2 * Math.PI * 120
 
 export function TimerRing({ timeLeft, totalTime, isBreak, status }: TimerRingProps) {
-  const [animatedOffset, setAnimatedOffset] = useState(0)
-  const circumference = 2 * Math.PI * 120
   const progress = totalTime > 0 ? timeLeft / totalTime : 0
-  const offset = circumference * (1 - Math.min(Math.max(progress, 0), 1))
+  const offset = SVG_CIRCUMFERENCE * (1 - Math.min(Math.max(progress, 0), 1))
+  const [animatedOffset, setAnimatedOffset] = useState(offset)
 
   useEffect(() => {
     setAnimatedOffset(offset)
@@ -55,7 +55,7 @@ export function TimerRing({ timeLeft, totalTime, isBreak, status }: TimerRingPro
         stroke="url(#ringGradient)"
         strokeWidth="8"
         strokeLinecap="round"
-        strokeDasharray={circumference}
+        strokeDasharray={SVG_CIRCUMFERENCE}
         strokeDashoffset={animatedOffset}
         filter={isPaused ? undefined : 'url(#ringGlow)'}
         className="transition-all duration-700 ease-linear"

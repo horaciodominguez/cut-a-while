@@ -1,9 +1,9 @@
-import { useRef, useState, type MouseEvent } from 'react'
+import { useRef, useState, type MouseEvent, type ReactNode } from 'react'
 
 interface RippleButtonProps {
   onClick: () => void
   label: string
-  icon?: string
+  icon?: ReactNode
   primary?: boolean
   secondary?: boolean
 }
@@ -33,7 +33,7 @@ export function RippleButton({ onClick, label, icon, primary, secondary }: Rippl
             : ''
         }`}
     >
-      {icon && <span className="mr-1.5">{icon}</span>}
+      {icon && <span className="mr-1.5 inline-flex">{icon}</span>}
       {label}
       {ripples.map((r) => (
         <span

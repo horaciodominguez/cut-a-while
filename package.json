@@ -12,12 +12,29 @@
   "categories": [
     "Other"
   ],
-  "icon": "src/assets/icons/logo.png",
   "activationEvents": [
     "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "cut-a-while",
+          "title": "Cut a While",
+          "icon": "src/assets/icons/container.svg"
+        }
+      ]
+    },
+    "views": {
+      "cut-a-while": [
+        {
+          "type": "webview",
+          "id": "cut-a-while.timerPanel",
+          "name": "Timer"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "cut-a-while.showPanel",
@@ -46,27 +63,27 @@
     "configuration": {
       "title": "Cut a While",
       "properties": {
-        "cut-a-while.workDuration": {
-          "type": "number",
-          "default": 25,
-          "minimum": 1,
-          "maximum": 180,
-          "description": "Work session duration in minutes"
-        },
-        "cut-a-while.breakDuration": {
-          "type": "number",
-          "default": 5,
-          "minimum": 1,
-          "maximum": 60,
-          "description": "Short break duration in minutes"
-        },
-        "cut-a-while.longBreakDuration": {
-          "type": "number",
-          "default": 15,
-          "minimum": 1,
-          "maximum": 120,
-          "description": "Long break duration in minutes"
-        },
+    "cut-a-while.workDuration": {
+      "type": "number",
+      "default": 1,
+      "minimum": 1,
+      "maximum": 180,
+      "description": "Work session duration in minutes"
+    },
+    "cut-a-while.breakDuration": {
+      "type": "number",
+      "default": 0.25,
+      "minimum": 0.25,
+      "maximum": 60,
+      "description": "Short break duration in minutes"
+    },
+    "cut-a-while.longBreakDuration": {
+      "type": "number",
+      "default": 1,
+      "minimum": 0.25,
+      "maximum": 120,
+      "description": "Long break duration in minutes"
+    },
         "cut-a-while.longBreakInterval": {
           "type": "number",
           "default": 4,

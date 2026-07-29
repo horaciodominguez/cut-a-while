@@ -7,6 +7,7 @@ export type CycleType = 'work' | 'break';
 export interface TimerState {
   status: TimerStatus;
   timeLeft: number;
+  totalTime: number;
   cycleType: CycleType;
   completedSessions: number;
   currentTask: string;
@@ -29,6 +30,7 @@ export class TimerManager implements vscode.Disposable {
     return this.storage.get('timerState', {
       status: 'idle',
       timeLeft: config.workDuration,
+      totalTime: config.workDuration,
       cycleType: 'work',
       completedSessions: 0,
       currentTask: '',
@@ -42,9 +44,9 @@ export class TimerManager implements vscode.Disposable {
   private getConfig() {
     const config = vscode.workspace.getConfiguration('cut-a-while');
     return {
-      workDuration: config.get<number>('workDuration', 25) * 60,
-      breakDuration: config.get<number>('breakDuration', 5) * 60,
-      longBreakDuration: config.get<number>('longBreakDuration', 15) * 60,
+      workDuration: Math.round(config.get<number>('workDuration', 1) * 60),
+      breakDuration: Math.round(config.get<number>('breakDuration', 0.25) * 60),
+      longBreakDuration: Math.round(config.get<number>('longBreakDuration', 1) * 60),
       longBreakInterval: config.get<number>('longBreakInterval', 4),
       autoStart: config.get<boolean>('autoStart', true),
     };
@@ -64,6 +66,7 @@ export class TimerManager implements vscode.Disposable {
     if (this.state.status === 'idle' || this.state.status === 'stopped') {
       const config = this.getConfig();
       this.state.timeLeft = config.workDuration;
+      this.state.totalTime = config.workDuration;
       this.state.cycleType = 'work';
     }
 
@@ -98,6 +101,7 @@ export class TimerManager implements vscode.Disposable {
     this.state = {
       status: 'idle',
       timeLeft: config.workDuration,
+      totalTime: config.workDuration,
       cycleType: 'work',
       completedSessions: 0,
       currentTask: '',
@@ -115,6 +119,7 @@ export class TimerManager implements vscode.Disposable {
     this.state.currentTask = '';
     const config = this.getConfig();
     this.state.timeLeft = config.workDuration;
+    this.state.totalTime = config.workDuration;
     this.state.cycleType = 'work';
     this.state.status = 'running';
     this.startTick();
@@ -138,6 +143,7 @@ export class TimerManager implements vscode.Disposable {
     if (this.state.cycleType === 'work') {
       const isLongBreak = this.state.completedSessions % config.longBreakInterval === 0;
       this.state.timeLeft = isLongBreak ? config.longBreakDuration : config.breakDuration;
+      this.state.totalTime = this.state.timeLeft;
       this.state.status = 'break';
       this.state.cycleType = 'break';
       this.state.currentTask = '';
@@ -147,12 +153,14 @@ export class TimerManager implements vscode.Disposable {
     }
 
     this.state.timeLeft = config.workDuration;
+    this.state.totalTime = config.workDuration;
     this.state.cycleType = 'work';
     this.state.currentTask = '';
     this.emit();
 
     if (config.autoStart) {
       this.state.status = 'running';
+      this.state.totalTime = config.workDuration;
       this.startTick();
       this.emit();
     }

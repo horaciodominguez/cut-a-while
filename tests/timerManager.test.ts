@@ -66,6 +66,8 @@ describe('TimerManager', () => {
       longBreakInterval: 4,
       autoStart: true,
     }
+    // Tests above use the old defaults for stability.
+    // The new UI defaults (1min work / 15s break / 1min long) are set in package.json.
     storage = createMockStorage()
     timer = new TimerManager(storage as unknown as Memento)
   })

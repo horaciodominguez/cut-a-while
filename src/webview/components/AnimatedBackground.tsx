@@ -46,12 +46,13 @@ export function AnimatedBackground({ isBreak }: { isBreak: boolean }) {
     window.addEventListener('resize', resize)
 
     currentRef.current = isBreak ? 1 : 0
-    const spots = Array.from({ length: 6 }, () => ({
+    const spots = Array.from({ length: 6 }, (_, i) => ({
       x: Math.random(),
       y: Math.random(),
       r: 0.3 + Math.random() * 0.4,
       dx: (Math.random() - 0.5) * 0.002,
       dy: (Math.random() - 0.5) * 0.002,
+      idx: i,
     }))
 
     function animate() {

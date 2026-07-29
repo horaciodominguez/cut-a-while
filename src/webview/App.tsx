@@ -10,17 +10,13 @@ import { SessionDots } from './components/SessionDots.tsx'
 import { IconPlay, IconPause, IconStop, IconReset, IconSkip } from './components/Icons.tsx'
 import { useConfetti } from './hooks/useConfetti.ts'
 
-const WORK_TOTAL = 25 * 60
-const BREAK_TOTAL = 5 * 60
-const LONG_BREAK_TOTAL = 15 * 60
-
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
-type CycleType = 'work' | 'break'
 
 interface TimerState {
   status: TimerStatus
   timeLeft: number
-  cycleType: CycleType
+  totalTime: number
+  cycleType: 'work' | 'break'
   completedSessions: number
   currentTask: string
 }
@@ -46,7 +42,8 @@ const STATUS_LABELS: Record<TimerStatus, string> = {
 function App() {
   const [state, setState] = useState<TimerState>({
     status: 'idle',
-    timeLeft: WORK_TOTAL,
+    timeLeft: 60,
+    totalTime: 60,
     cycleType: 'work',
     completedSessions: 0,
     currentTask: '',
@@ -94,9 +91,6 @@ function App() {
   }
 
   const isBreak = state.cycleType === 'break'
-  const totalTime = isBreak
-    ? state.timeLeft > BREAK_TOTAL + 60 ? LONG_BREAK_TOTAL : BREAK_TOTAL
-    : WORK_TOTAL
   const timeStr = formatSecondsToTime(state.timeLeft)
   const digits = timeStr.replace(':', '').split('')
 
@@ -118,7 +112,7 @@ function App() {
               <div className="relative w-64 h-64 sm:w-64 sm:h-64">
                 <TimerRing
                   timeLeft={state.timeLeft}
-                  totalTime={totalTime}
+                  totalTime={state.totalTime}
                   isBreak={isBreak}
                   status={state.status}
                 />
