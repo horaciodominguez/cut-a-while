@@ -60,6 +60,18 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'getSessions':
           this.postSessions();
           break;
+        case 'getTodos':
+          this.postTodos();
+          break;
+        case 'addTodo':
+          this.handleAddTodo(message.text);
+          break;
+        case 'toggleTodo':
+          this.handleToggleTodo(message.id);
+          break;
+        case 'deleteTodo':
+          this.handleDeleteTodo(message.id);
+          break;
       }
     });
 
@@ -108,6 +120,31 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     } catch {
       // Webview disposed — ignore
     }
+  }
+
+  private postTodos() {
+    if (!this.webviewView) return;
+    try {
+      const todos = this.timer.getTodos();
+      this.webviewView.webview.postMessage({ command: 'todosUpdate', todos });
+    } catch {
+      // Webview disposed — ignore
+    }
+  }
+
+  private async handleAddTodo(text: string) {
+    await this.timer.addTodo(text);
+    this.postTodos();
+  }
+
+  private async handleToggleTodo(id: string) {
+    await this.timer.toggleTodo(id);
+    this.postTodos();
+  }
+
+  private async handleDeleteTodo(id: string) {
+    await this.timer.deleteTodo(id);
+    this.postTodos();
   }
 
   private async updateSetting(key: string, value: unknown) {

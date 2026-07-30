@@ -89,6 +89,19 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
     [workSessions],
   )
 
+  const topTasks = useMemo(() => {
+    const map = new Map<string, number>()
+    workSessions.forEach((s) => {
+      if (!s.task) return
+      map.set(s.task, (map.get(s.task) || 0) + 1)
+    })
+    return Array.from(map.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+  }, [workSessions])
+
+  const topTaskMax = Math.max(1, ...topTasks.map(([, c]) => c))
+
   return (
     <AnimatePresence>
       <motion.div
@@ -130,7 +143,7 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
             </p>
           )}
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 mb-6">
             <h3 className="text-[10px] uppercase tracking-[0.15em] text-white/30 mb-3 font-semibold">Last 7 days</h3>
             <div className="flex items-end justify-between gap-1.5 h-24">
               {weekDaysWithMax.map((d) => (
@@ -142,6 +155,25 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
               ))}
             </div>
           </div>
+
+          {topTasks.length > 0 && (
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] uppercase tracking-[0.15em] text-white/30 mb-3 font-semibold">Top Tasks</h3>
+              <div className="space-y-2">
+                {topTasks.map(([taskName, count]) => (
+                  <div key={taskName} className="flex items-center gap-2">
+                    <span className="text-xs text-white/70 flex-1 truncate">{taskName}</span>
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-16 h-1.5 rounded-full bg-white/8 overflow-hidden">
+                        <div className="h-full rounded-full bg-blue-500/60" style={{ width: `${(count / topTaskMax) * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] text-white/40 tabular-nums w-6 text-right">{count}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </motion.div>
     </AnimatePresence>

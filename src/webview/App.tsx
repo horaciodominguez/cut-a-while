@@ -12,6 +12,7 @@ import { useConfetti } from './hooks/useConfetti.ts'
 import { useSound } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
 import { StatsPanel } from './components/StatsPanel.tsx'
+import { TodoPanel } from './components/TodoPanel.tsx'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
 
@@ -22,6 +23,14 @@ interface TimerState {
   cycleType: 'work' | 'break'
   completedSessions: number
   currentTask: string
+}
+
+interface TodoItem {
+  id: string
+  text: string
+  done: boolean
+  createdAt: number
+  completedAt?: number
 }
 
 import { postMessage, setVsCodeState } from './vscodeApi.ts'
@@ -45,6 +54,9 @@ function App() {
   })
   const [task, setTask] = useState('')
   const [statsOpen, setStatsOpen] = useState(false)
+  const [todoOpen, setTodoOpen] = useState(false)
+  const [todos, setTodos] = useState<TodoItem[]>([])
+  const [showNewInput, setShowNewInput] = useState(false)
   const prevCompletedRef = useRef(state.completedSessions)
   const prevCycleRef = useRef(state.cycleType)
   const firstStateRef = useRef(true)
@@ -64,10 +76,14 @@ function App() {
       if (msg.command === 'settingsUpdate') {
         setSoundEnabled(msg.settings.soundEnabled)
       }
+      if (msg.command === 'todosUpdate') {
+        setTodos(msg.todos)
+      }
     }
     window.addEventListener('message', handler)
     postMessage({ command: 'getState' })
     postMessage({ command: 'getSettings' })
+    postMessage({ command: 'getTodos' })
     return () => window.removeEventListener('message', handler)
   }, [])
 
@@ -93,18 +109,30 @@ function App() {
     postMessage({ command, ...payload })
   }, [])
 
-  const handleStart = () => {
+  const handleStart = (taskText?: string) => {
     if (state.status === 'break') {
       send('skipBreak')
       setTask('')
       return
     }
-    const t = task.trim()
+    const t = (taskText ?? task).trim()
     if (t) {
+      const exists = todos.some((td) => td.text === t && !td.done)
+      if (!exists) {
+        postMessage({ command: 'addTodo', text: t })
+      }
       send('setTask', { task: t })
     }
     send('start', { task: t || undefined })
+    setShowNewInput(false)
   }
+
+  const handleChipClick = (text: string) => {
+    setTask(text)
+    handleStart(text)
+  }
+
+  const pendingTodos = todos.filter((t) => !t.done)
 
   const isBreak = state.cycleType === 'break'
   const timeStr = formatSecondsToTime(state.timeLeft)
@@ -125,6 +153,17 @@ function App() {
         </svg>
       </button>
       {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
+      <button
+        onClick={() => setTodoOpen(true)}
+        className="fixed top-24 right-4 z-30 p-2 rounded-full bg-white/8 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/15 transition-all duration-200 cursor-pointer"
+        aria-label="Open todo list"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 11 12 14 22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </button>
+      {todoOpen && <TodoPanel onClose={() => setTodoOpen(false)} />}
 
       <div className="flex flex-col items-center min-h-screen px-4 py-6 select-none">
         <GlassCard className="w-full max-w-xs p-6 sm:p-8">
@@ -167,7 +206,30 @@ function App() {
               <SessionDots completed={state.completedSessions} />
 
               <div className="w-full space-y-3">
-                {state.status === 'idle' && (
+                {state.status === 'idle' && !showNewInput && pendingTodos.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-wrap justify-center gap-1.5"
+                  >
+                    {pendingTodos.slice(0, 6).map((td) => (
+                      <button
+                        key={td.id}
+                        onClick={() => handleChipClick(td.text)}
+                        className="px-3 py-1.5 text-xs bg-white/10 hover:bg-blue-500/30 border border-white/15 hover:border-blue-400/40 text-white/70 hover:text-white rounded-lg transition-all duration-200 cursor-pointer truncate max-w-[140px]"
+                      >
+                        {td.text}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => setShowNewInput(true)}
+                      className="px-3 py-1.5 text-xs bg-white/5 hover:bg-white/15 border border-dashed border-white/20 text-white/40 hover:text-white/70 rounded-lg transition-all duration-200 cursor-pointer"
+                    >
+                      +new
+                    </button>
+                  </motion.div>
+                )}
+                {state.status === 'idle' && (showNewInput || pendingTodos.length === 0) && (
                   <motion.input
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}

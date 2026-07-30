@@ -20,6 +20,14 @@ export interface Session {
   task: string;
 }
 
+export interface TodoItem {
+  id: string;
+  text: string;
+  done: boolean;
+  createdAt: number;
+  completedAt?: number;
+}
+
 export class TimerManager implements vscode.Disposable {
   private state: TimerState;
   private tickTimer: ReturnType<typeof setTimeout> | null = null;
@@ -61,6 +69,37 @@ export class TimerManager implements vscode.Disposable {
 
   getSessions(): Session[] {
     return this.storage.get<Session[]>('sessions', []);
+  }
+
+  getTodos(): TodoItem[] {
+    return this.storage.get<TodoItem[]>('todos', []);
+  }
+
+  async addTodo(text: string): Promise<TodoItem> {
+    const todos = this.getTodos();
+    const todo: TodoItem = {
+      id: `${Date.now()}-${Math.random()}`,
+      text,
+      done: false,
+      createdAt: Date.now(),
+    };
+    todos.push(todo);
+    await this.storage.set('todos', todos);
+    return todo;
+  }
+
+  async toggleTodo(id: string): Promise<void> {
+    const todos = this.getTodos();
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+    todo.done = !todo.done;
+    todo.completedAt = todo.done ? Date.now() : undefined;
+    await this.storage.set('todos', todos);
+  }
+
+  async deleteTodo(id: string): Promise<void> {
+    const todos = this.getTodos().filter((t) => t.id !== id);
+    await this.storage.set('todos', todos);
   }
 
   start(task?: string) {
