@@ -19,9 +19,16 @@
   "main": "./out/extension.js",
   "contributes": {
     "viewsContainers": {
-      "panel": [
+      "activitybar": [
         {
           "id": "cut-a-while",
+          "title": "Cut a While",
+          "icon": "src/assets/icons/container.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "cut-a-while-panel",
           "title": "Cut a While",
           "icon": "src/assets/icons/container.svg"
         }
@@ -30,9 +37,16 @@
     "views": {
       "cut-a-while": [
         {
+          "type": "tree",
+          "id": "cut-a-while.timerTree",
+          "name": "Timer"
+        }
+      ],
+      "cut-a-while-panel": [
+        {
           "type": "webview",
           "id": "cut-a-while.timerPanel",
-          "name": "Timer"
+          "name": "Timer Panel"
         }
       ]
     },

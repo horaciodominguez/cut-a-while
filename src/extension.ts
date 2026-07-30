@@ -4,6 +4,7 @@ import { StorageManager } from './storage/store.js';
 import { StatusBarManager } from './statusBar.js';
 import { CommandsManager } from './commands.js';
 import { TimerPanelProvider } from './providers/TimerPanelProvider.js';
+import { TimerTreeProvider } from './treeView/TimerTreeProvider.js';
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new StorageManager(context);
@@ -18,6 +19,11 @@ export function activate(context: vscode.ExtensionContext) {
   const provider = new TimerPanelProvider(context.extensionUri, timer);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(TimerPanelProvider.viewType, provider),
+  );
+
+  const treeProvider = new TimerTreeProvider(timer, storage);
+  context.subscriptions.push(
+    vscode.window.registerTreeDataProvider('cut-a-while.timerTree', treeProvider),
   );
 
   context.subscriptions.push(timer);
