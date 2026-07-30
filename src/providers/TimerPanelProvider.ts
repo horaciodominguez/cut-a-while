@@ -91,6 +91,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           longBreakInterval: config.get<number>('longBreakInterval', 4),
           autoStart: config.get<boolean>('autoStart', true),
           soundEnabled: config.get<boolean>('sound.enabled', true),
+          zenMode: config.get<boolean>('zenMode', false),
           accent: config.get<string>('theme.accent', 'blue'),
         },
       });
@@ -122,6 +123,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       longBreakInterval: 'longBreakInterval',
       autoStart: 'autoStart',
       soundEnabled: 'sound.enabled',
+      zenMode: 'zenMode',
       accent: 'theme.accent',
     };
     return map[key] || key;

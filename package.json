@@ -116,6 +116,11 @@
           "default": true,
           "description": "Play sound when a cycle completes"
         },
+        "cut-a-while.zenMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Zen mode on focus start (hides sidebar, panels)"
+        },
         "cut-a-while.statusBarAlignment": {
           "type": "string",
           "default": "right",

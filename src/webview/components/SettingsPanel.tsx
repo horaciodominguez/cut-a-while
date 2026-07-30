@@ -10,6 +10,7 @@ interface ExtensionSettings {
   longBreakInterval: number
   autoStart: boolean
   soundEnabled: boolean
+  zenMode: boolean
   accent: string
 }
 
@@ -31,6 +32,7 @@ export function SettingsPanel() {
     longBreakInterval: 4,
     autoStart: true,
     soundEnabled: true,
+    zenMode: false,
     accent: 'blue',
   })
 
@@ -101,6 +103,7 @@ export function SettingsPanel() {
                 <Section title="Behavior">
                   <Toggle label="Auto-start" value={settings.autoStart} onChange={(v) => updateSetting('autoStart', v)} />
                   <Toggle label="Sound" value={settings.soundEnabled} onChange={(v) => updateSetting('soundEnabled', v)} />
+                  <Toggle label="Zen mode" value={settings.zenMode} onChange={(v) => updateSetting('zenMode', v)} />
                 </Section>
 
                 <Section title="Accent Color">
