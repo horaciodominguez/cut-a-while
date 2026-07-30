@@ -11,6 +11,7 @@ import { IconPlay, IconPause, IconStop, IconReset, IconSkip } from './components
 import { useConfetti } from './hooks/useConfetti.ts'
 import { useSound } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
+import { StatsPanel } from './components/StatsPanel.tsx'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
 
@@ -43,6 +44,7 @@ function App() {
     currentTask: '',
   })
   const [task, setTask] = useState('')
+  const [statsOpen, setStatsOpen] = useState(false)
   const prevCompletedRef = useRef(state.completedSessions)
   const prevCycleRef = useRef(state.cycleType)
   const firstStateRef = useRef(true)
@@ -112,6 +114,17 @@ function App() {
     <>
       <AnimatedBackground isBreak={isBreak} />
       <SettingsPanel />
+      <button
+        onClick={() => setStatsOpen(true)}
+        className="fixed top-14 right-4 z-30 p-2 rounded-full bg-white/8 border border-white/10 text-white/50 hover:text-white/80 hover:bg-white/15 transition-all duration-200 cursor-pointer"
+        aria-label="Open stats"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="18" rx="1"/>
+          <rect x="14" y="8" width="7" height="13" rx="1"/>
+        </svg>
+      </button>
+      {statsOpen && <StatsPanel onClose={() => setStatsOpen(false)} />}
 
       <div className="flex flex-col items-center min-h-screen px-4 py-6 select-none">
         <GlassCard className="w-full max-w-xs p-6 sm:p-8">

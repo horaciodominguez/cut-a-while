@@ -57,6 +57,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'skipBreak':
           this.timer.skipBreak();
           break;
+        case 'getSessions':
+          this.postSessions();
+          break;
       }
     });
 
@@ -91,6 +94,16 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           accent: config.get<string>('theme.accent', 'blue'),
         },
       });
+    } catch {
+      // Webview disposed — ignore
+    }
+  }
+
+  private postSessions() {
+    if (!this.webviewView) return;
+    try {
+      const sessions = this.timer.getSessions();
+      this.webviewView.webview.postMessage({ command: 'sessionsUpdate', sessions });
     } catch {
       // Webview disposed — ignore
     }

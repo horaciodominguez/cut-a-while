@@ -13,6 +13,13 @@ export interface TimerState {
   currentTask: string;
 }
 
+export interface Session {
+  timestamp: number;
+  type: CycleType;
+  duration: number;
+  task: string;
+}
+
 export class TimerManager implements vscode.Disposable {
   private state: TimerState;
   private tickTimer: ReturnType<typeof setTimeout> | null = null;
@@ -50,6 +57,10 @@ export class TimerManager implements vscode.Disposable {
 
   getState(): TimerState {
     return { ...this.state };
+  }
+
+  getSessions(): Session[] {
+    return this.storage.get<Session[]>('sessions', []);
   }
 
   start(task?: string) {
@@ -124,7 +135,7 @@ export class TimerManager implements vscode.Disposable {
 
   private startTick() {
     this.stopTick();
-    this.tick();
+    this.tickTimer = setTimeout(() => this.tick(), 1000);
   }
 
   private tick() {

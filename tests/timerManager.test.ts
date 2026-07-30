@@ -277,4 +277,65 @@ describe('TimerManager', () => {
     timer.reset()
     expect(timer.getState().completedSessions).toBe(0)
   })
+
+  it('stores session duration as totalTime, not hardcoded workDuration', async () => {
+    timer.start('dur test')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    expect(storage.pushToArray).toHaveBeenCalledWith('sessions', expect.objectContaining({
+      type: 'work',
+      duration: 25 * 60,
+      task: 'dur test',
+    }))
+  })
+
+  it('increments completedSessions only on work completion, not break', async () => {
+    configStore.autoStart = false
+    timer.start()
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    expect(timer.getState().completedSessions).toBe(1)
+
+    // complete the break
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000)
+    // completedSessions should still be 1 (not incremented during break)
+    expect(timer.getState().completedSessions).toBe(1)
+  })
+
+  it('sets status to idle when break completes with autoStart=false', async () => {
+    configStore.autoStart = false
+    timer.start()
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    expect(timer.getState().status).toBe('break')
+
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000)
+    expect(timer.getState().status).toBe('idle')
+    expect(timer.getState().cycleType).toBe('work')
+  })
+
+  it('getSessions returns stored sessions', async () => {
+    expect(timer.getSessions()).toEqual([])
+
+    timer.start()
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    const sessions = timer.getSessions()
+    expect(sessions).toHaveLength(1)
+    expect(sessions[0].type).toBe('work')
+    expect(sessions[0].duration).toBe(25 * 60)
+  })
+
+  it('does not tick on start before 1 second', () => {
+    timer.start()
+    // timeLeft should still be the full duration (no immediate decrement)
+    expect(timer.getState().timeLeft).toBe(25 * 60)
+  })
+
+  it('handles start from stopped state', () => {
+    timer.start()
+    vi.advanceTimersByTime(5000)
+    timer.stop()
+    expect(timer.getState().status).toBe('stopped')
+
+    timer.start()
+    expect(timer.getState().status).toBe('running')
+    expect(timer.getState().timeLeft).toBe(25 * 60)
+  })
 })
