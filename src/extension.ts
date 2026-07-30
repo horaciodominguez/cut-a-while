@@ -5,6 +5,7 @@ import { StatusBarManager } from './statusBar.js';
 import { CommandsManager } from './commands.js';
 import { TimerPanelProvider } from './providers/TimerPanelProvider.js';
 import { TimerTreeProvider } from './treeView/TimerTreeProvider.js';
+import { FileFocusTracker } from './fileFocusTracker.js';
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new StorageManager(context);
@@ -25,6 +26,9 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider('cut-a-while.timerTree', treeProvider),
   );
+
+  const focusTracker = new FileFocusTracker(timer, storage);
+  context.subscriptions.push(focusTracker);
 
   context.subscriptions.push(timer);
   context.subscriptions.push(statusBar);
