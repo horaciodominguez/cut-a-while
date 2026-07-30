@@ -1,5 +1,22 @@
 import * as vscode from 'vscode';
-import { TimerManager } from '../timer/timerManager.js';
+import { TimerManager, type Session } from '../timer/timerManager.js';
+
+function calcStreak(sessions: Session[]): number {
+  const work = sessions.filter((s) => s.type === 'work');
+  if (work.length === 0) return 0;
+  const dates = new Set<number>();
+  for (const s of work) {
+    const d = new Date(s.timestamp);
+    dates.add(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
+  }
+  const sorted = [...dates].sort((a, b) => b - a);
+  let streak = 1;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i - 1] - sorted[i] === 1) streak++;
+    else break;
+  }
+  return streak;
+}
 
 export class TimerPanelProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'cut-a-while.timerPanel';
@@ -63,6 +80,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'getTodos':
           this.postTodos();
           break;
+        case 'getProjectFocus':
+          this.postProjectFocus();
+          break;
         case 'addTodo':
           this.handleAddTodo(message.text);
           break;
@@ -84,7 +104,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       const state = this.timer.getState();
-      this.webviewView.webview.postMessage({ command: 'stateUpdate', ...state });
+      const sessions = this.timer.getSessions();
+      this.webviewView.webview.postMessage({ command: 'stateUpdate', ...state, streak: calcStreak(sessions) });
     } catch {
       // Webview disposed — ignore
     }
@@ -103,6 +124,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           longBreakInterval: config.get<number>('longBreakInterval', 4),
           autoStart: config.get<boolean>('autoStart', true),
           soundEnabled: config.get<boolean>('sound.enabled', true),
+          soundTheme: config.get<string>('soundTheme', 'bell'),
           zenMode: config.get<boolean>('zenMode', false),
           accent: config.get<string>('theme.accent', 'blue'),
         },
@@ -147,6 +169,16 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     this.postTodos();
   }
 
+  private postProjectFocus() {
+    if (!this.webviewView) return;
+    try {
+      const data = this.timer.getProjectFocusTimes();
+      this.webviewView.webview.postMessage({ command: 'projectFocusUpdate', projects: data });
+    } catch {
+      // Webview disposed — ignore
+    }
+  }
+
   private async updateSetting(key: string, value: unknown) {
     const configKey = `cut-a-while.${this.configKeyMap(key)}`;
     await vscode.workspace.getConfiguration().update(configKey, value, vscode.ConfigurationTarget.Global);
@@ -160,6 +192,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       longBreakInterval: 'longBreakInterval',
       autoStart: 'autoStart',
       soundEnabled: 'sound.enabled',
+      soundTheme: 'soundTheme',
       zenMode: 'zenMode',
       accent: 'theme.accent',
     };

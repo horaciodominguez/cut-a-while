@@ -116,6 +116,19 @@
           "default": true,
           "description": "Play sound when a cycle completes"
         },
+        "cut-a-while.soundTheme": {
+          "type": "string",
+          "default": "bell",
+          "enum": [
+            "bell",
+            "digital",
+            "nature",
+            "zen",
+            "soft",
+            "classic"
+          ],
+          "description": "Sound theme for cycle completion"
+        },
         "cut-a-while.zenMode": {
           "type": "boolean",
           "default": false,

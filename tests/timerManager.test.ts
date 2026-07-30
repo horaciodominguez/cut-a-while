@@ -338,4 +338,99 @@ describe('TimerManager', () => {
     expect(timer.getState().status).toBe('running')
     expect(timer.getState().timeLeft).toBe(25 * 60)
   })
+
+  describe('todos', () => {
+    it('getTodos returns empty array initially', () => {
+      expect(timer.getTodos()).toEqual([])
+    })
+
+    it('addTodo creates a todo item', async () => {
+      const todo = await timer.addTodo('Refactor auth')
+      expect(todo.text).toBe('Refactor auth')
+      expect(todo.done).toBe(false)
+      expect(todo.id).toBeTruthy()
+      expect(todo.createdAt).toBeGreaterThan(0)
+      expect(todo.completedAt).toBeUndefined()
+    })
+
+    it('addTodo stores the todo and getTodos returns it', async () => {
+      await timer.addTodo('Write tests')
+      const todos = timer.getTodos()
+      expect(todos).toHaveLength(1)
+      expect(todos[0].text).toBe('Write tests')
+      expect(todos[0].done).toBe(false)
+    })
+
+    it('addTodo appends multiple todos', async () => {
+      await timer.addTodo('Task A')
+      await timer.addTodo('Task B')
+      expect(timer.getTodos()).toHaveLength(2)
+    })
+
+    it('toggleTodo marks a pending todo as done and sets completedAt', async () => {
+      const todo = await timer.addTodo('Fix bug')
+      expect(todo.done).toBe(false)
+      expect(todo.completedAt).toBeUndefined()
+
+      await timer.toggleTodo(todo.id)
+      const todos = timer.getTodos()
+      const toggled = todos.find((t) => t.id === todo.id)
+      expect(toggled).toBeDefined()
+      expect(toggled!.done).toBe(true)
+      expect(toggled!.completedAt).toBeGreaterThan(0)
+    })
+
+    it('toggleTodo marks a done todo as pending and clears completedAt', async () => {
+      const todo = await timer.addTodo('Done task')
+      await timer.toggleTodo(todo.id)
+      await timer.toggleTodo(todo.id)
+
+      const todos = timer.getTodos()
+      const toggled = todos.find((t) => t.id === todo.id)
+      expect(toggled!.done).toBe(false)
+      expect(toggled!.completedAt).toBeUndefined()
+    })
+
+    it('toggleTodo does nothing for unknown id', async () => {
+      const before = timer.getTodos()
+      await timer.toggleTodo('nonexistent')
+      expect(timer.getTodos()).toEqual(before)
+    })
+
+    it('deleteTodo removes a todo', async () => {
+      const todo = await timer.addTodo('To delete')
+      expect(timer.getTodos()).toHaveLength(1)
+
+      await timer.deleteTodo(todo.id)
+      expect(timer.getTodos()).toHaveLength(0)
+    })
+
+    it('deleteTodo only removes the specified todo', async () => {
+      const a = await timer.addTodo('Keep me')
+      await timer.addTodo('Remove me')
+      const c = await timer.addTodo('Keep me too')
+
+      const removed = timer.getTodos().find((t) => t.text === 'Remove me')!
+      await timer.deleteTodo(removed.id)
+
+      const remaining = timer.getTodos()
+      expect(remaining).toHaveLength(2)
+      expect(remaining.find((t) => t.id === a.id)).toBeDefined()
+      expect(remaining.find((t) => t.id === c.id)).toBeDefined()
+    })
+
+    it('deleteTodo does nothing for unknown id', async () => {
+      await timer.addTodo('Some task')
+      const before = timer.getTodos()
+      await timer.deleteTodo('nonexistent')
+      expect(timer.getTodos()).toEqual(before)
+    })
+
+    it('todos are persisted via storage', async () => {
+      await timer.addTodo('Persist check')
+      expect(storage.set).toHaveBeenCalledWith('todos', expect.arrayContaining([
+        expect.objectContaining({ text: 'Persist check' }),
+      ]))
+    })
+  })
 })

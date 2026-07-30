@@ -12,7 +12,6 @@ interface TodoItem {
 
 interface TodoPanelProps {
   onClose: () => void
-  onSelectTask?: (task: string) => void
 }
 
 export function TodoPanel({ onClose }: TodoPanelProps) {

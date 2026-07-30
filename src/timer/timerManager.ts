@@ -75,6 +75,10 @@ export class TimerManager implements vscode.Disposable {
     return this.storage.get<TodoItem[]>('todos', []);
   }
 
+  getProjectFocusTimes(): Record<string, number> {
+    return this.storage.get<Record<string, number>>('projectFocus', {});
+  }
+
   async addTodo(text: string): Promise<TodoItem> {
     const todos = this.getTodos();
     const todo: TodoItem = {

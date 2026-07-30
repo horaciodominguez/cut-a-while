@@ -13,6 +13,7 @@ import { useSound } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
 import { StatsPanel } from './components/StatsPanel.tsx'
 import { TodoPanel } from './components/TodoPanel.tsx'
+import { StreakIndicator } from './components/StreakIndicator.tsx'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
 
@@ -61,8 +62,10 @@ function App() {
   const prevCycleRef = useRef(state.cycleType)
   const firstStateRef = useRef(true)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [soundTheme, setSoundTheme] = useState('bell')
+  const [streak, setStreak] = useState(0)
   const fireConfetti = useConfetti()
-  const { playWorkComplete, playBreakComplete } = useSound(soundEnabled)
+  const { playWorkComplete, playBreakComplete } = useSound(soundEnabled, soundTheme as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic')
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -72,9 +75,11 @@ function App() {
         const timerState: TimerState = msg
         setState(timerState)
         setVsCodeState(timerState)
+        if (typeof msg.streak === 'number') setStreak(msg.streak)
       }
       if (msg.command === 'settingsUpdate') {
         setSoundEnabled(msg.settings.soundEnabled)
+        if (msg.settings.soundTheme) setSoundTheme(msg.settings.soundTheme)
       }
       if (msg.command === 'todosUpdate') {
         setTodos(msg.todos)
@@ -204,6 +209,7 @@ function App() {
               </div>
 
               <SessionDots completed={state.completedSessions} />
+              <StreakIndicator streak={streak} />
 
               <div className="w-full space-y-3">
                 {state.status === 'idle' && !showNewInput && pendingTodos.length > 0 && (

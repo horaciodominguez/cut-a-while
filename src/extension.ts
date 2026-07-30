@@ -7,6 +7,8 @@ import { TimerPanelProvider } from './providers/TimerPanelProvider.js';
 import { TimerTreeProvider } from './treeView/TimerTreeProvider.js';
 import { FileFocusTracker } from './fileFocusTracker.js';
 import { ZenModeManager } from './zenModeManager.js';
+import { AutoPauseManager } from './autoPauseManager.js';
+import { ProjectFocusTracker } from './projectFocusTracker.js';
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new StorageManager(context);
@@ -33,6 +35,12 @@ export function activate(context: vscode.ExtensionContext) {
 
   const zenMode = new ZenModeManager(timer);
   context.subscriptions.push(zenMode);
+
+  const autoPause = new AutoPauseManager(timer);
+  context.subscriptions.push(autoPause);
+
+  const projectFocus = new ProjectFocusTracker(timer, storage);
+  context.subscriptions.push(projectFocus);
 
   context.subscriptions.push(timer);
   context.subscriptions.push(statusBar);

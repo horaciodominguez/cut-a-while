@@ -52,6 +52,7 @@ function getWeekDays(): Date[] {
 
 export function StatsPanel({ onClose }: StatsPanelProps) {
   const [sessions, setSessions] = useState<Session[]>([])
+  const [projects, setProjects] = useState<Record<string, number>>({})
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
@@ -59,9 +60,13 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
       if (msg.command === 'sessionsUpdate') {
         setSessions(msg.sessions)
       }
+      if (msg.command === 'projectFocusUpdate') {
+        setProjects(msg.projects || {})
+      }
     }
     window.addEventListener('message', handler)
     postMessage({ command: 'getSessions' })
+    postMessage({ command: 'getProjectFocus' })
     return () => window.removeEventListener('message', handler)
   }, [])
 
@@ -157,7 +162,7 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
           </div>
 
           {topTasks.length > 0 && (
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 mb-6">
               <h3 className="text-[10px] uppercase tracking-[0.15em] text-white/30 mb-3 font-semibold">Top Tasks</h3>
               <div className="space-y-2">
                 {topTasks.map(([taskName, count]) => (
@@ -171,6 +176,22 @@ export function StatsPanel({ onClose }: StatsPanelProps) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {Object.keys(projects).length > 0 && (
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] uppercase tracking-[0.15em] text-white/30 mb-3 font-semibold">Projects</h3>
+              <div className="space-y-2">
+                {Object.entries(projects)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([name, seconds]) => (
+                    <div key={name} className="flex items-center justify-between">
+                      <span className="text-xs text-white/70 truncate">{name}</span>
+                      <span className="text-[10px] text-white/40 tabular-nums">{Math.round(seconds / 60)} min</span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

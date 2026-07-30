@@ -10,6 +10,7 @@ interface ExtensionSettings {
   longBreakInterval: number
   autoStart: boolean
   soundEnabled: boolean
+  soundTheme: string
   zenMode: boolean
   accent: string
 }
@@ -23,6 +24,15 @@ const ACCENTS = [
   { id: 'teal', label: 'Teal' },
 ]
 
+const SOUND_THEMES = [
+  { id: 'bell', label: 'Bell' },
+  { id: 'digital', label: 'Digital' },
+  { id: 'nature', label: 'Nature' },
+  { id: 'zen', label: 'Zen' },
+  { id: 'soft', label: 'Soft' },
+  { id: 'classic', label: 'Classic' },
+]
+
 export function SettingsPanel() {
   const [open, setOpen] = useState(false)
   const [settings, setSettings] = useState<ExtensionSettings>({
@@ -32,6 +42,7 @@ export function SettingsPanel() {
     longBreakInterval: 4,
     autoStart: true,
     soundEnabled: true,
+    soundTheme: 'bell',
     zenMode: false,
     accent: 'blue',
   })
@@ -102,8 +113,26 @@ export function SettingsPanel() {
 
                 <Section title="Behavior">
                   <Toggle label="Auto-start" value={settings.autoStart} onChange={(v) => updateSetting('autoStart', v)} />
-                  <Toggle label="Sound" value={settings.soundEnabled} onChange={(v) => updateSetting('soundEnabled', v)} />
                   <Toggle label="Zen mode" value={settings.zenMode} onChange={(v) => updateSetting('zenMode', v)} />
+                </Section>
+
+                <Section title="Sound">
+                  <Toggle label="Enabled" value={settings.soundEnabled} onChange={(v) => updateSetting('soundEnabled', v)} />
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {SOUND_THEMES.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => updateSetting('soundTheme', t.id)}
+                        className={`text-[10px] px-2.5 py-1 rounded-full font-medium transition-all duration-200 cursor-pointer ${
+                          settings.soundTheme === t.id
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            : 'bg-white/5 text-white/40 border border-white/10 hover:bg-white/10'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
                 </Section>
 
                 <Section title="Accent Color">
