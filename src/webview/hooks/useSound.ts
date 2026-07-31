@@ -2,9 +2,21 @@ import { useCallback, useRef } from 'react'
 
 type SoundTheme = 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic'
 
+let audioCtx: AudioContext | null = null
+
+function getAudioCtx(): AudioContext {
+  if (!audioCtx) {
+    audioCtx = new AudioContext()
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
+  }
+  return audioCtx
+}
+
 const beep = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) => {
   try {
-    const ctx = new AudioContext()
+    const ctx = getAudioCtx()
     const osc = ctx.createOscillator()
     const gain = ctx.createGain()
     osc.connect(gain)
@@ -15,7 +27,6 @@ const beep = (frequency: number, duration: number, type: OscillatorType = 'sine'
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
     osc.start()
     osc.stop(ctx.currentTime + duration)
-    ctx.close()
   } catch {
     // Web Audio not available
   }
@@ -69,5 +80,9 @@ export function useSound(enabled: boolean, theme: SoundTheme = 'bell') {
   }, [])
 
   return { playWorkComplete, playBreakComplete }
+}
+
+export function playThemeSound(theme: SoundTheme, type: 'work' | 'break' = 'break') {
+  THEMES[theme]?.[type]()
 }
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { postMessage } from '../vscodeApi.ts'
 import { IconSettings } from './Icons.tsx'
+import { playThemeSound } from '../hooks/useSound.ts'
 
 interface ExtensionSettings {
   workDuration: number
@@ -122,7 +123,10 @@ export function SettingsPanel() {
                     {SOUND_THEMES.map((t) => (
                       <button
                         key={t.id}
-                        onClick={() => updateSetting('soundTheme', t.id)}
+                        onClick={() => {
+                          updateSetting('soundTheme', t.id)
+                          playThemeSound(t.id as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic')
+                        }}
                         className={`text-[10px] px-2.5 py-1 rounded-full font-medium transition-all duration-200 cursor-pointer ${
                           settings.soundTheme === t.id
                             ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
