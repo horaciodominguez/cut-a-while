@@ -127,16 +127,16 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
             <Card value={workSessions.length} label="Total" />
           </div>
 
-          <p className="text-xs text-center mb-5" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-xs text-center mb-5" style={{ color: 'var(--text-secondary)' }}>
             {totalMinutes} min of focus
           </p>
 
           <div className="mb-6">
-            <h3 className="text-[11px] mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>Last 7 days</h3>
+            <h3 className="section-label">Last 7 days</h3>
             <div className="flex items-end justify-between gap-1.5 h-24">
               {weekDays.map((d) => (
                 <div key={d.label} className="flex flex-col items-center gap-1.5 flex-1">
-                  <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-muted)' }}>{d.count}</span>
+                  <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>{d.count}</span>
                   <div
                     className="w-full rounded-t-sm"
                     style={{
@@ -144,10 +144,10 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
                       minHeight: d.count > 0 ? '4px' : '2px',
                       background: d.count > 0
                         ? 'color-mix(in srgb, var(--accent) 65%, transparent)'
-                        : 'var(--ring-track)',
+                        : 'var(--border-subtle)',
                     }}
                   />
-                  <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>{d.label}</span>
+                  <span className="text-[9px]" style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
                 </div>
               ))}
             </div>
@@ -155,13 +155,13 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
 
           {topTasks.length > 0 && (
             <div className="mb-6">
-              <h3 className="text-[11px] mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>Top tasks</h3>
+              <h3 className="section-label">Top tasks</h3>
               <div className="space-y-2">
                 {topTasks.map(([taskName, count]) => (
                   <div key={taskName} className="flex items-center gap-2">
                     <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{taskName}</span>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--ring-track)' }}>
+                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -171,7 +171,7 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
                           }}
                         />
                       </div>
-                      <span className="text-[10px] tabular-nums w-6 text-right" style={{ color: 'var(--text-muted)' }}>{count}</span>
+                      <span className="text-[10px] tabular-nums w-6 text-right" style={{ color: 'var(--text-secondary)' }}>{count}</span>
                     </div>
                   </div>
                 ))}
@@ -181,14 +181,14 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
 
           {Object.keys(projects).length > 0 && (
             <div>
-              <h3 className="text-[11px] mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>Projects</h3>
+              <h3 className="section-label">Projects</h3>
               <div className="space-y-2">
                 {Object.entries(projects)
                   .sort((a, b) => b[1] - a[1])
                   .map(([name, seconds]) => (
                     <div key={name} className="flex items-center justify-between">
                       <span className="text-xs truncate" style={{ color: 'var(--text)' }}>{name}</span>
-                      <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-muted)' }}>
+                      <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
                         {Math.round(seconds / 60)} min
                       </span>
                     </div>
@@ -205,11 +205,11 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
 function Card({ value, label }: { value: number; label: string }) {
   return (
     <div
-      className="flex flex-col items-center gap-1 py-2.5 px-2 rounded"
-      style={{ background: 'color-mix(in srgb, var(--text) 5%, transparent)', border: '1px solid var(--surface-border)' }}
+      className="flex flex-col items-center gap-1 py-2.5 px-2 rounded-[var(--radius-sm)]"
+      style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}
     >
       <span className="text-lg font-semibold tabular-nums" style={{ color: 'var(--text)' }}>{value}</span>
-      <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{label}</span>
     </div>
   )
 }
@@ -217,8 +217,8 @@ function Card({ value, label }: { value: number; label: string }) {
 function EmptyState({ icon, message }: { icon: React.ReactNode; message: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 px-4 text-center">
-      <span style={{ color: 'var(--text-muted)' }}>{icon}</span>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{message}</p>
+      <span style={{ color: 'var(--text-secondary)' }}>{icon}</span>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{message}</p>
     </div>
   )
 }

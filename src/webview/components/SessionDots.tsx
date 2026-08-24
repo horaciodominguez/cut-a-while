@@ -7,23 +7,26 @@ export function SessionDots({
   total?: number
   accent: string
 }) {
+  const doneInCycle = completed % total === 0 && completed > 0 ? total : completed % total
+
   return (
-    <div className="flex gap-1.5 items-center">
-      {Array.from({ length: total }, (_, i) => {
-        const filled = i < completed % total
-        return (
+    <div className="flex items-center gap-2.5">
+      <div className="flex gap-[5px]">
+        {Array.from({ length: total }, (_, i) => (
           <span
             key={i}
-            className="w-2 h-2 rounded-full transition-colors duration-200"
+            className="block rounded-full transition-all duration-300"
             style={{
-              background: filled ? accent : 'var(--ring-track)',
-              opacity: filled ? 1 : 0.5,
+              width: 6,
+              height: 6,
+              background: i < doneInCycle ? accent : 'var(--border-subtle)',
+              opacity: i < doneInCycle ? 1 : 0.5,
             }}
           />
-        )
-      })}
-      <span className="text-[10px] ml-1 tabular-nums" style={{ color: 'var(--text-muted)' }}>
-        {completed % total}/{total}
+        ))}
+      </div>
+      <span className="text-[10px] tabular-nums font-medium" style={{ color: 'var(--text-tertiary)' }}>
+        {doneInCycle}/{total}
       </span>
     </div>
   )

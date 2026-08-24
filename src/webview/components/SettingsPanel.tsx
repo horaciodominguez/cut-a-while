@@ -100,11 +100,9 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
               }}
               className="text-[10px] px-2.5 py-1 rounded font-medium cursor-pointer border transition-colors"
               style={{
-                background: settings.soundTheme === t.id
-                  ? 'color-mix(in srgb, var(--accent) 20%, transparent)'
-                  : 'transparent',
-                color: settings.soundTheme === t.id ? 'var(--accent)' : 'var(--text-muted)',
-                borderColor: settings.soundTheme === t.id ? 'var(--accent)' : 'var(--surface-border)',
+                background: settings.soundTheme === t.id ? 'var(--accent-soft)' : 'transparent',
+                color: settings.soundTheme === t.id ? 'var(--accent)' : 'var(--text-secondary)',
+                borderColor: settings.soundTheme === t.id ? 'color-mix(in srgb, var(--accent) 35%, transparent)' : 'var(--border-subtle)',
               }}
             >
               {t.label}
@@ -136,10 +134,8 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-5">
-      <h3 className="text-[11px] mb-3 font-medium" style={{ color: 'var(--text-muted)' }}>
-        {title}
-      </h3>
+    <div className="mb-6">
+      <h3 className="section-label">{title}</h3>
       <div className="space-y-3">{children}</div>
     </div>
   )
@@ -150,7 +146,7 @@ function Slider({ label, value, min, max, step, onChange }: {
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-xs min-w-24" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span className="text-xs min-w-24" style={{ color: 'var(--text-secondary)' }}>{label}</span>
       <div className="flex items-center gap-2 flex-1">
         <input
           type="range"
@@ -162,7 +158,7 @@ function Slider({ label, value, min, max, step, onChange }: {
           className="flex-1 h-1 cursor-pointer"
           style={{ accentColor: 'var(--accent)' }}
         />
-        <span className="text-xs w-10 text-right tabular-nums" style={{ color: 'var(--text-muted)' }}>{value}</span>
+        <span className="text-xs w-10 text-right tabular-nums" style={{ color: 'var(--text-tertiary)' }}>{value}</span>
       </div>
     </div>
   )
@@ -171,11 +167,11 @@ function Slider({ label, value, min, max, step, onChange }: {
 function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{label}</span>
+      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</span>
       <button
         onClick={() => onChange(!value)}
         className="relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-200"
-        style={{ background: value ? 'var(--accent)' : 'var(--ring-track)' }}
+        style={{ background: value ? 'var(--accent)' : 'var(--border-subtle)' }}
         role="switch"
         aria-checked={value}
       >

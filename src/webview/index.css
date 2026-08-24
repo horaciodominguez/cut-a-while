@@ -1,22 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --accent: #3b82f6;
-  --surface: var(--vscode-sideBar-background, var(--vscode-editor-background, #1e1e1e));
-  --surface-border: var(--vscode-panel-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
-  --text: var(--vscode-foreground, #cccccc);
-  --text-muted: var(--vscode-descriptionForeground, rgba(204, 204, 204, 0.65));
-  --ring-track: var(--vscode-widget-border, rgba(128, 128, 128, 0.35));
-  --btn-bg: var(--vscode-button-background, #0e639c);
-  --btn-fg: var(--vscode-button-foreground, #ffffff);
-  --btn-hover: var(--vscode-button-hoverBackground, #1177bb);
-  --focus: var(--vscode-focusBorder, var(--accent));
-  --input-bg: var(--vscode-input-background, #3c3c3c);
-  --input-border: var(--vscode-input-border, transparent);
-  --input-fg: var(--vscode-input-foreground, #cccccc);
-  --input-placeholder: var(--vscode-input-placeholderForeground, rgba(204, 204, 204, 0.5));
+  --accent: #5b8def;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 22%, transparent);
+  --break: #34d399;
+  --break-soft: color-mix(in srgb, var(--break) 12%, transparent);
 
-  font-family: var(--vscode-font-family, 'Segoe UI', system-ui, sans-serif);
+  --bg: var(--vscode-editor-background, #141414);
+  --bg-elevated: color-mix(in srgb, var(--vscode-foreground, #fff) 4%, var(--bg));
+  --border: color-mix(in srgb, var(--vscode-foreground, #fff) 8%, transparent);
+  --border-subtle: color-mix(in srgb, var(--vscode-foreground, #fff) 5%, transparent);
+
+  --text: var(--vscode-foreground, #ebebeb);
+  --text-secondary: color-mix(in srgb, var(--text) 55%, transparent);
+  --text-tertiary: color-mix(in srgb, var(--text) 35%, transparent);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 999px;
+
+  --font-ui: var(--vscode-font-family, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif);
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", "JetBrains Mono", monospace;
+
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.5;
   color-scheme: dark light;
@@ -27,89 +34,329 @@
 body {
   margin: 0;
   padding: 0;
-  background: var(--vscode-editor-background, #1e1e1e);
+  background: var(--bg);
   color: var(--text);
   overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 35%, transparent);
+  background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: var(--surface-border);
+  background: var(--border-subtle);
   border-radius: 2px;
 }
 
-.timer-bg {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
+/* ── Shell ── */
+.timer-shell {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 20px 28px;
+  overflow: hidden;
+}
+
+.timer-shell::before {
+  content: '';
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  translate: -50% 0;
+  width: min(320px, 90vw);
+  height: min(320px, 90vw);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--ambient) 0%, transparent 70%);
   pointer-events: none;
-  background: var(--vscode-editor-background, #1e1e1e);
-  transition: background 0.4s ease;
+  z-index: 0;
+  transition: background 0.6s ease;
 }
 
-.timer-bg.is-break {
-  background: linear-gradient(
-    180deg,
-    var(--vscode-editor-background, #1e1e1e) 0%,
-    color-mix(in srgb, #10b981 8%, var(--vscode-editor-background, #1e1e1e)) 100%
-  );
+.timer-shell.is-work { --ambient: var(--accent-glow); }
+.timer-shell.is-break { --ambient: var(--break-soft); }
+
+/* ── Header ── */
+.timer-header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
 }
 
-.timer-bg.is-work {
-  background: linear-gradient(
-    180deg,
-    var(--vscode-editor-background, #1e1e1e) 0%,
-    color-mix(in srgb, var(--accent) 6%, var(--vscode-editor-background, #1e1e1e)) 100%
-  );
+.wordmark {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   padding: 0;
-  border: 1px solid transparent;
-  border-radius: 4px;
+  border: none;
+  border-radius: var(--radius-sm);
   background: transparent;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   cursor: pointer;
-  transition: background 0.12s ease, color 0.12s ease;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
 .icon-btn:hover {
   color: var(--text);
-  background: color-mix(in srgb, var(--text) 8%, transparent);
+  background: var(--border-subtle);
 }
 
 .icon-btn:focus-visible {
-  outline: 1px solid var(--focus);
-  outline-offset: 1px;
+  outline: 1px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Hero timer ── */
+.timer-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  padding: 8px 0 24px;
+}
+
+.timer-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.timer-time {
+  font-family: var(--font-mono);
+  font-size: clamp(3rem, 14vw, 3.75rem);
+  font-weight: 300;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text);
+  transition: opacity 0.2s ease;
+}
+
+.timer-time.is-pulse {
+  opacity: 0.7;
+}
+
+.timer-phase {
+  margin-top: 10px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.timer-phase.is-active {
+  color: var(--phase-color, var(--accent));
+}
+
+/* ── Meta row ── */
+.timer-meta {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* ── Task ── */
+.task-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--font-ui);
+  text-align: center;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.task-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.task-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.task-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  padding: 0 4px;
+}
+
+.task-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.task-chip {
+  padding: 6px 12px;
+  font-size: 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.task-chip:hover {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+.task-chip-new {
+  border-style: dashed;
+  color: var(--text-tertiary);
+}
+
+/* ── Actions ── */
+.timer-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 120px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* ── Footer stat ── */
+.timer-footer {
+  position: relative;
+  z-index: 1;
+  margin-top: 24px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+/* ── Drawer overrides ── */
+.drawer-overlay {
+  background: color-mix(in srgb, #000 50%, transparent);
+  backdrop-filter: blur(4px);
+}
+
+.drawer-panel {
+  background: var(--bg);
+  border-left: 1px solid var(--border-subtle);
+}
+
+.drawer-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  margin-bottom: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 }

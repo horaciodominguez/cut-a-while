@@ -65,18 +65,9 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
           onChange={(e) => setNewText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && addTodo()}
           placeholder="Add a task..."
-          className="flex-1 px-3 py-2 rounded text-xs focus:outline-none"
-          style={{
-            background: 'var(--input-bg)',
-            border: '1px solid var(--input-border)',
-            color: 'var(--input-fg)',
-          }}
+          className="task-input flex-1 text-left text-xs"
         />
-        <button
-          onClick={addTodo}
-          className="px-3 py-2 text-xs font-medium rounded cursor-pointer whitespace-nowrap"
-          style={{ background: 'var(--btn-bg)', color: 'var(--btn-fg)' }}
-        >
+        <button onClick={addTodo} className="btn-primary px-4 py-2.5 text-xs min-w-0">
           Add
         </button>
       </div>
@@ -94,12 +85,7 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
           />
         )}
         {pending.map((todo) => (
-          <TodoRow
-            key={todo.id}
-            todo={todo}
-            onToggle={() => toggleTodo(todo.id)}
-            onDelete={() => deleteTodo(todo.id)}
-          />
+          <TodoRow key={todo.id} todo={todo} onToggle={() => toggleTodo(todo.id)} onDelete={() => deleteTodo(todo.id)} />
         ))}
       </div>
 
@@ -108,7 +94,7 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
           <button
             onClick={() => setShowCompleted(!showCompleted)}
             className="flex items-center gap-2 text-[11px] font-medium w-full text-left cursor-pointer"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'var(--text-tertiary)' }}
           >
             <span className={`transition-transform duration-150 ${showCompleted ? 'rotate-90' : ''}`}>▸</span>
             Completed ({completed.length})
@@ -116,18 +102,9 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
           {showCompleted && (
             <div className="space-y-1 mt-2">
               {completed.map((todo) => (
-                <TodoRow
-                  key={todo.id}
-                  todo={todo}
-                  onToggle={() => toggleTodo(todo.id)}
-                  onDelete={() => deleteTodo(todo.id)}
-                />
+                <TodoRow key={todo.id} todo={todo} onToggle={() => toggleTodo(todo.id)} onDelete={() => deleteTodo(todo.id)} />
               ))}
-              <button
-                onClick={clearCompleted}
-                className="mt-3 text-[10px] cursor-pointer"
-                style={{ color: 'var(--text-muted)' }}
-              >
+              <button onClick={clearCompleted} className="mt-3 text-[10px] cursor-pointer" style={{ color: 'var(--text-tertiary)' }}>
                 Clear completed
               </button>
             </div>
@@ -148,35 +125,35 @@ function TodoRow({
   onDelete: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 group">
+    <div className="flex items-center gap-2.5 group py-1">
       <button
         onClick={onToggle}
-        className="w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 cursor-pointer"
+        className="w-[15px] h-[15px] rounded-[4px] border flex items-center justify-center flex-shrink-0 cursor-pointer transition-colors"
         style={{
-          borderColor: todo.done ? 'var(--accent)' : 'var(--surface-border)',
+          borderColor: todo.done ? 'var(--accent)' : 'var(--border)',
           background: todo.done ? 'var(--accent)' : 'transparent',
         }}
         aria-label={todo.done ? 'Mark as pending' : 'Mark as done'}
       >
         {todo.done && (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         )}
       </button>
       <span
         className={`flex-1 text-xs truncate ${todo.done ? 'line-through' : ''}`}
-        style={{ color: todo.done ? 'var(--text-muted)' : 'var(--text)', opacity: todo.done ? 0.7 : 1 }}
+        style={{ color: todo.done ? 'var(--text-tertiary)' : 'var(--text-secondary)' }}
       >
         {todo.text}
       </span>
       <button
         onClick={onDelete}
-        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-pointer"
-        style={{ color: 'var(--text-muted)' }}
+        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-pointer icon-btn"
+        style={{ width: 22, height: 22 }}
         aria-label="Delete task"
       >
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
           <line x1="18" y1="6" x2="6" y2="18" />
           <line x1="6" y1="6" x2="18" y2="18" />
         </svg>
@@ -188,8 +165,8 @@ function TodoRow({
 function EmptyState({ icon, message }: { icon: React.ReactNode; message: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-8 px-2 text-center">
-      <span style={{ color: 'var(--text-muted)' }}>{icon}</span>
-      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>{message}</p>
+      <span style={{ color: 'var(--text-tertiary)' }}>{icon}</span>
+      <p className="text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>{message}</p>
     </div>
   )
 }
