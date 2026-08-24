@@ -1,12 +1,19 @@
 import * as vscode from 'vscode';
 import { TimerManager } from './timer/timerManager.js';
 import { Notifications } from './notifications.js';
+import type { TimerPanelProvider } from './providers/TimerPanelProvider.js';
 
 export class CommandsManager {
   private timer: TimerManager;
+  private panel: TimerPanelProvider | undefined;
 
-  constructor(timer: TimerManager) {
+  constructor(timer: TimerManager, panel?: TimerPanelProvider) {
     this.timer = timer;
+    this.panel = panel;
+  }
+
+  setPanel(panel: TimerPanelProvider) {
+    this.panel = panel;
   }
 
   register(context: vscode.ExtensionContext) {
@@ -33,8 +40,9 @@ export class CommandsManager {
       Notifications.info('Timer reset');
     });
 
-    const stats = vscode.commands.registerCommand('cut-a-while.stats', () => {
-      vscode.commands.executeCommand('cut-a-while.timerPanel.focus');
+    const stats = vscode.commands.registerCommand('cut-a-while.stats', async () => {
+      await vscode.commands.executeCommand('cut-a-while.timerPanel.focus');
+      this.panel?.openStats();
     });
 
     context.subscriptions.push(toggle, showPanel, reset, stats);

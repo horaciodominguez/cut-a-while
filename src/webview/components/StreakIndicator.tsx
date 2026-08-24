@@ -1,43 +1,42 @@
-import { motion } from 'framer-motion'
-
-const MILESTONES = [7, 14, 30, 60, 100]
-
 interface StreakIndicatorProps {
   streak: number
 }
+
+const MILESTONES = [7, 14, 30, 60, 100]
 
 export function StreakIndicator({ streak }: StreakIndicatorProps) {
   if (streak <= 0) return null
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center gap-2 mt-4"
-    >
-      <div className="flex items-center gap-1.5">
-        <span className="text-lg">🔥</span>
-        <span className="text-sm font-semibold text-white/70 tabular-nums">{streak}</span>
-        <span className="text-xs text-white/40">day{streak !== 1 ? 's' : ''}</span>
+    <div className="flex flex-col items-center gap-2 mt-2">
+      <div className="flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 3c1.5 3 2 5.5 1 8 2-1 4 0 5 2 1 2 0 5-2 7-1.5 1.5-3.5 2.5-6 2.5s-4.5-1-6-2.5c-2-2-3-5-2-7 1-2 3-3 5-2-1-2.5-.5-5 1-8z" />
+        </svg>
+        <span className="text-sm font-medium tabular-nums" style={{ color: 'var(--text)' }}>
+          {streak}
+        </span>
+        <span className="text-xs">day{streak !== 1 ? 's' : ''}</span>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5 items-center">
         {MILESTONES.map((m) => {
           const reached = streak >= m
           return (
             <span
               key={m}
-              className={`text-[10px] px-2 py-0.5 rounded-full font-medium transition-all duration-300 ${
-                reached
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'bg-white/5 text-white/20 border border-white/5'
-              }`}
+              title={`${m} days`}
+              className="text-[9px] tabular-nums px-1.5 py-0.5 rounded"
+              style={{
+                color: reached ? 'var(--accent)' : 'var(--text-muted)',
+                opacity: reached ? 1 : 0.4,
+                border: `1px solid ${reached ? 'var(--accent)' : 'var(--surface-border)'}`,
+              }}
             >
               {m}
-              {reached ? ' ⭐' : ''}
             </span>
           )
         })}
       </div>
-    </motion.div>
+    </div>
   )
 }

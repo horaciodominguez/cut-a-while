@@ -17,13 +17,13 @@ export function activate(context: vscode.ExtensionContext) {
   const statusBar = new StatusBarManager(timer);
   statusBar.init();
 
-  const commands = new CommandsManager(timer);
-  commands.register(context);
-
   const provider = new TimerPanelProvider(context.extensionUri, timer);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(TimerPanelProvider.viewType, provider),
   );
+
+  const commands = new CommandsManager(timer, provider);
+  commands.register(context);
 
   const treeProvider = new TimerTreeProvider(timer, storage);
   context.subscriptions.push(

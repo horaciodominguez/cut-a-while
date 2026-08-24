@@ -1,16 +1,25 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'JetBrains Mono';
-  src: local('JetBrains Mono');
-  font-display: swap;
-}
-
 :root {
-  font-family: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
-  font-size: 14px;
+  --accent: #3b82f6;
+  --surface: var(--vscode-sideBar-background, var(--vscode-editor-background, #1e1e1e));
+  --surface-border: var(--vscode-panel-border, var(--vscode-widget-border, rgba(128, 128, 128, 0.35)));
+  --text: var(--vscode-foreground, #cccccc);
+  --text-muted: var(--vscode-descriptionForeground, rgba(204, 204, 204, 0.65));
+  --ring-track: var(--vscode-widget-border, rgba(128, 128, 128, 0.35));
+  --btn-bg: var(--vscode-button-background, #0e639c);
+  --btn-fg: var(--vscode-button-foreground, #ffffff);
+  --btn-hover: var(--vscode-button-hoverBackground, #1177bb);
+  --focus: var(--vscode-focusBorder, var(--accent));
+  --input-bg: var(--vscode-input-background, #3c3c3c);
+  --input-border: var(--vscode-input-border, transparent);
+  --input-fg: var(--vscode-input-foreground, #cccccc);
+  --input-placeholder: var(--vscode-input-placeholderForeground, rgba(204, 204, 204, 0.5));
+
+  font-family: var(--vscode-font-family, 'Segoe UI', system-ui, sans-serif);
+  font-size: 13px;
   line-height: 1.5;
-  color-scheme: dark;
+  color-scheme: dark light;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -18,8 +27,8 @@
 body {
   margin: 0;
   padding: 0;
-  background: #0f172a;
-  color: #ffffff;
+  background: var(--vscode-editor-background, #1e1e1e);
+  color: var(--text);
   overflow-x: hidden;
 }
 
@@ -30,7 +39,7 @@ body {
 }
 
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 ::-webkit-scrollbar {
@@ -40,35 +49,67 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--surface-border);
   border-radius: 2px;
 }
 
-@keyframes flip-down {
-  0% { transform: rotateX(0deg); opacity: 1; }
-  50% { transform: rotateX(-90deg); opacity: 0.5; }
-  100% { transform: rotateX(-180deg); opacity: 0; }
+.timer-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--vscode-editor-background, #1e1e1e);
+  transition: background 0.4s ease;
 }
 
-@keyframes flip-up {
-  0% { transform: rotateX(180deg); opacity: 0; }
-  50% { transform: rotateX(90deg); opacity: 0.5; }
-  100% { transform: rotateX(0deg); opacity: 1; }
+.timer-bg.is-break {
+  background: linear-gradient(
+    180deg,
+    var(--vscode-editor-background, #1e1e1e) 0%,
+    color-mix(in srgb, #10b981 8%, var(--vscode-editor-background, #1e1e1e)) 100%
+  );
 }
 
-@keyframes ripple {
-  0% { transform: scale(0); opacity: 1; }
-  100% { transform: scale(15); opacity: 0; }
+.timer-bg.is-work {
+  background: linear-gradient(
+    180deg,
+    var(--vscode-editor-background, #1e1e1e) 0%,
+    color-mix(in srgb, var(--accent) 6%, var(--vscode-editor-background, #1e1e1e)) 100%
+  );
 }
 
-.animate-flip-down {
-  animation: flip-down 0.3s ease-in-out forwards;
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
 }
 
-.animate-flip-up {
-  animation: flip-up 0.3s ease-in-out forwards;
+.icon-btn:hover {
+  color: var(--text);
+  background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 
-.animate-ripple {
-  animation: ripple 0.6s ease-out forwards;
+.icon-btn:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 1px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

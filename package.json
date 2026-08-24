@@ -78,27 +78,27 @@
     "configuration": {
       "title": "Cut a While",
       "properties": {
-    "cut-a-while.workDuration": {
-      "type": "number",
-      "default": 1,
-      "minimum": 1,
-      "maximum": 180,
-      "description": "Work session duration in minutes"
-    },
-    "cut-a-while.breakDuration": {
-      "type": "number",
-      "default": 0.25,
-      "minimum": 0.25,
-      "maximum": 60,
-      "description": "Short break duration in minutes"
-    },
-    "cut-a-while.longBreakDuration": {
-      "type": "number",
-      "default": 1,
-      "minimum": 0.25,
-      "maximum": 120,
-      "description": "Long break duration in minutes"
-    },
+        "cut-a-while.workDuration": {
+          "type": "number",
+          "default": 25,
+          "minimum": 1,
+          "maximum": 180,
+          "description": "Work session duration in minutes"
+        },
+        "cut-a-while.breakDuration": {
+          "type": "number",
+          "default": 5,
+          "minimum": 0.25,
+          "maximum": 60,
+          "description": "Short break duration in minutes"
+        },
+        "cut-a-while.longBreakDuration": {
+          "type": "number",
+          "default": 15,
+          "minimum": 0.25,
+          "maximum": 120,
+          "description": "Long break duration in minutes"
+        },
         "cut-a-while.longBreakInterval": {
           "type": "number",
           "default": 4,
@@ -172,7 +172,6 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",
-    "canvas-confetti": "^1.9.4",
     "framer-motion": "^12.43.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

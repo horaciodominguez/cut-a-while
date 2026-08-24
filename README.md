@@ -1,69 +1,67 @@
-# React + TypeScript + Vite
+# Cut a While
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Pomodoro timer for VS Code — stay focused, track your flow.
 
-Currently, two official plugins are available:
+A minimal timer that lives in the editor: status bar, sidebar tree, and a panel webview that follows your VS Code theme.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Work / short break / long break cycles
+- Status bar countdown with one-click panel access
+- Task list and session stats
+- Optional Zen mode on focus start
+- Configurable accent color and completion sounds
+- Focus time tracking per file (hover) and per project
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Commands
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+| Command | Shortcut |
+|---------|----------|
+| Start / Pause Timer | `Ctrl+Shift+T` |
+| Show Timer Panel | — |
+| Reset Timer | — |
+| Show Statistics | — |
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+Open the Command Palette (`Ctrl+Shift+P`) and search for **Cut a While**.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Settings
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `cut-a-while.workDuration` | `25` | Work session (minutes) |
+| `cut-a-while.breakDuration` | `5` | Short break (minutes) |
+| `cut-a-while.longBreakDuration` | `15` | Long break (minutes) |
+| `cut-a-while.longBreakInterval` | `4` | Sessions before a long break |
+| `cut-a-while.autoStart` | `true` | Auto-start the next cycle |
+| `cut-a-while.sound.enabled` | `true` | Play sound on cycle complete |
+| `cut-a-while.soundTheme` | `bell` | Sound theme |
+| `cut-a-while.zenMode` | `false` | Enable Zen mode on focus start |
+| `cut-a-while.statusBarAlignment` | `right` | Status bar position |
+| `cut-a-while.theme.accent` | `blue` | Accent color for the timer UI |
+
+## Development
+
+```bash
+npm install
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Press **F5** in VS Code to launch an Extension Development Host.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Watch mode:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
+```
+
+Tests:
+
+```bash
+npm test
+```
+
+Package as `.vsix`:
+
+```bash
+npm run package
 ```

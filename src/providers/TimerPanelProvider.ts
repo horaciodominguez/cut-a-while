@@ -30,6 +30,16 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     this.timer = timer;
   }
 
+  openStats() {
+    if (!this.webviewView) return;
+    try {
+      this.webviewView.show?.(true);
+      this.webviewView.webview.postMessage({ command: 'openStats' });
+    } catch {
+      // Webview disposed — ignore
+    }
+  }
+
   resolveWebviewView(webviewView: vscode.WebviewView) {
     this.webviewView = webviewView;
 
@@ -41,10 +51,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = this.getWebviewHtml(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage((message) => {
-      console.log('[Provider] received:', message.command);
       switch (message.command) {
         case 'start':
-          console.log('[Provider] start, task:', message.task);
           this.timer.start(message.task);
           break;
         case 'pause':
@@ -118,9 +126,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       this.webviewView.webview.postMessage({
         command: 'settingsUpdate',
         settings: {
-          workDuration: config.get<number>('workDuration', 1),
-          breakDuration: config.get<number>('breakDuration', 0.25),
-          longBreakDuration: config.get<number>('longBreakDuration', 1),
+          workDuration: config.get<number>('workDuration', 25),
+          breakDuration: config.get<number>('breakDuration', 5),
+          longBreakDuration: config.get<number>('longBreakDuration', 15),
           longBreakInterval: config.get<number>('longBreakInterval', 4),
           autoStart: config.get<boolean>('autoStart', true),
           soundEnabled: config.get<boolean>('sound.enabled', true),
