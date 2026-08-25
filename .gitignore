@@ -25,6 +25,12 @@ config.local.*
 # Agent / tooling config
 .opencode/
 .agents/
+.cursor/
+
+# Local screenshot / capture tooling (not part of the extension)
+screenshots/
+scripts/capture-screenshot.mjs
+scripts/
 
 # Editor directories and files
 .vscode/*

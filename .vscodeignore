@@ -20,3 +20,5 @@ eslint.config.js
 .git/**
 *.vsix
 .cursor/**
+screenshots/**
+scripts/**
