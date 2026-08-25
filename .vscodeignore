@@ -22,3 +22,6 @@ eslint.config.js
 .cursor/**
 screenshots/**
 scripts/**
+!media/**
+media/**/*.tmp
+media/**/*-tmp.png
