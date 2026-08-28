@@ -2,6 +2,8 @@
 
 **Pomodoro for VS Code** — stay in flow without leaving the editor.
 
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/horaciodominguez.cut-a-while?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while)
+
 ![Cut a While in VS Code — timer panel, sidebar, and status bar](media/screenshot.png)
 
 A minimal focus timer that lives inside VS Code: status bar countdown, activity-bar tree, and a clean webview panel that follows your editor theme.
@@ -30,13 +32,17 @@ External timers break concentration. Cut a While keeps work / break cycles, task
 
 ### VS Code Marketplace
 
-Search **Cut a While** in the Extensions view, or install from:
+Search **Cut a While** in the Extensions view, or install from the [Marketplace listing](https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while).
 
-`https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while`
+### Open VSX (Cursor / VSCodium)
 
-*(Link active after the first manual upload to the Marketplace.)*
+Search **Cut a While** in Cursor’s Extensions view, or install from [Open VSX](https://open-vsx.org/extension/horaciodominguez/cut-a-while) once published.
 
-### From source / `.vsix`
+### GitHub Release (`.vsix`)
+
+Download `cut-a-while-0.1.1.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
+
+### From source
 
 ```bash
 npm install
@@ -44,9 +50,7 @@ npm run build
 npm run package
 ```
 
-Then in VS Code: **Extensions → … → Install from VSIX…** and pick `cut-a-while-0.1.0.vsix`.
-
-Or press **F5** after `npm run build` to run an Extension Development Host.
+Then install the generated `cut-a-while-0.1.1.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
 
 ## Usage
 
@@ -113,6 +117,14 @@ npm run dev        # watch both
 npm test           # Vitest (timer, storage, time utils)
 npm run lint
 npm run package    # produce .vsix via vsce
+```
+
+**Publish to Open VSX** (Cursor / VSCodium): sign the [Publisher Agreement](https://open-vsx.org/), create namespace `horaciodominguez`, generate a token at [user settings](https://open-vsx.org/user-settings/tokens), then:
+
+```bash
+npm run package
+npx ovsx create-namespace horaciodominguez -p <TOKEN>   # first time only
+npm run publish:openvsx -- -p <TOKEN>
 ```
 
 **Debug:** open this folder in VS Code → **Run and Debug** → **Run Extension** (or **F5**). A second window (**Extension Development Host**) loads the extension.

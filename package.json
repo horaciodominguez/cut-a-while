@@ -187,6 +187,7 @@
     "dev": "concurrently \"npm run watch\" \"npm run build:webview -- --watch\"",
     "package": "vsce package",
     "publish": "vsce publish",
+    "publish:openvsx": "ovsx publish",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
