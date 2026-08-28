@@ -3,7 +3,7 @@
   "displayName": "Cut a While",
   "description": "Pomodoro timer for VS Code — stay focused, track your flow",
   "version": "0.1.0",
-  "publisher": "hord17",
+  "publisher": "horaciodominguez",
   "icon": "src/assets/icons/container.svg",
   "private": true,
   "type": "module",

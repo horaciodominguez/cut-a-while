@@ -113,4 +113,4 @@ Tip: after UI changes, rebuild the webview (`npm run build:webview` or `npm run 
 
 ## License
 
-Private for now (`"private": true` in `package.json`). Publisher: `hord17`.
+Private for now (`"private": true` in `package.json`). Publisher: `horaciodominguez`.
