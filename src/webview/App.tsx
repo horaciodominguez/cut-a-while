@@ -3,7 +3,7 @@ import { formatSecondsToTime } from '../core/utils/time.ts'
 import { TimerArc } from './components/TimerArc.tsx'
 import { SessionDots } from './components/SessionDots.tsx'
 import { IconPlay, IconPause, IconStop, IconReset, IconSkip, IconSettings, IconStats, IconTodo } from './components/Icons.tsx'
-import { useSound } from './hooks/useSound.ts'
+import { playCycleSound, unlockAudio } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
 import { StatsPanel } from './components/StatsPanel.tsx'
 import { TodoPanel } from './components/TodoPanel.tsx'
@@ -65,10 +65,10 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundTheme, setSoundTheme] = useState('bell')
   const [streak, setStreak] = useState(0)
-  const { playWorkComplete, playBreakComplete } = useSound(
-    soundEnabled,
-    soundTheme as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic',
-  )
+  const soundEnabledRef = useRef(soundEnabled)
+  const soundThemeRef = useRef(soundTheme)
+  soundEnabledRef.current = soundEnabled
+  soundThemeRef.current = soundTheme
 
   const handleAccentChange = useCallback((id: string) => {
     setAccent(id)
@@ -99,6 +99,14 @@ function App() {
         setSettingsOpen(false)
         setTodoOpen(false)
       }
+      if (msg.command === 'playSound' && (msg.type === 'work' || msg.type === 'break')) {
+        unlockAudio()
+        void playCycleSound(
+          typeof msg.theme === 'string' ? msg.theme : soundThemeRef.current,
+          msg.type,
+          soundEnabledRef.current,
+        )
+      }
     }
     window.addEventListener('message', handler)
     postMessage({ command: 'getState' })
@@ -114,22 +122,16 @@ function App() {
       prevCycleRef.current = state.cycleType
       return
     }
-    if (state.completedSessions > prevCompletedRef.current) {
-      playWorkComplete()
-      if (!prefersReducedMotion()) {
-        setPulse(true)
-        const t = setTimeout(() => setPulse(false), 280)
-        prevCompletedRef.current = state.completedSessions
-        prevCycleRef.current = state.cycleType
-        return () => clearTimeout(t)
-      }
-    }
-    if (prevCycleRef.current === 'break' && state.cycleType === 'work') {
-      playBreakComplete()
+    if (state.completedSessions > prevCompletedRef.current && !prefersReducedMotion()) {
+      setPulse(true)
+      const t = setTimeout(() => setPulse(false), 280)
+      prevCompletedRef.current = state.completedSessions
+      prevCycleRef.current = state.cycleType
+      return () => clearTimeout(t)
     }
     prevCompletedRef.current = state.completedSessions
     prevCycleRef.current = state.cycleType
-  }, [state.completedSessions, state.cycleType, playWorkComplete, playBreakComplete])
+  }, [state.completedSessions, state.cycleType])
 
   const send = useCallback((command: string, payload?: Record<string, unknown>) => {
     postMessage({ command, ...payload })

@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.1] - 2026-08-28
+
+### Fixed
+
+- Completion sounds now play while coding (not only when the timer panel has focus)
+- Windows uses a reliable system beep on cycle completion
+- Sound theme preview respects the Enabled toggle
+- Marketplace category set to `Other` only (invalid `Productivity` removed)
+
 ## [0.1.0] - 2026-08-28
 
 ### Added

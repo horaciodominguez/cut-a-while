@@ -38,6 +38,9 @@ export class TimerManager implements vscode.Disposable {
   private storage: StorageManager;
   private _onDidChangeState = new vscode.EventEmitter<TimerState>();
   readonly onDidChangeState: vscode.Event<TimerState> = this._onDidChangeState.event;
+  private _onDidCompleteCycle = new vscode.EventEmitter<CycleType>();
+  /** Fires with the cycle that just finished: work or break. */
+  readonly onDidCompleteCycle: vscode.Event<CycleType> = this._onDidCompleteCycle.event;
 
   constructor(storage: StorageManager) {
     this.storage = storage;
@@ -262,6 +265,7 @@ export class TimerManager implements vscode.Disposable {
       this.state.cycleType = 'break';
       this.state.currentTask = '';
       this.startTick();
+      this._onDidCompleteCycle.fire('work');
       this.emit();
       return;
     }
@@ -271,6 +275,7 @@ export class TimerManager implements vscode.Disposable {
     this.state.cycleType = 'work';
     this.state.currentTask = '';
     this.state.status = 'idle';
+    this._onDidCompleteCycle.fire('break');
     this.emit();
 
     if (config.autoStart) {
@@ -294,5 +299,6 @@ export class TimerManager implements vscode.Disposable {
   dispose() {
     this.stopTick();
     this._onDidChangeState.dispose();
+    this._onDidCompleteCycle.dispose();
   }
 }

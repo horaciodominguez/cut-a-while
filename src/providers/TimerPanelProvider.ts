@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { TimerManager, type Session } from '../timer/timerManager.js';
+import { playHostCompletionSound } from '../hostSound.js';
 
 function calcStreak(sessions: Session[]): number {
   const work = sessions.filter((s) => s.type === 'work');
@@ -103,9 +104,41 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       }
     });
 
-    const disposable = this.timer.onDidChangeState(() => this.postState());
-    webviewView.onDidDispose(() => disposable.dispose());
+    const stateDisposable = this.timer.onDidChangeState(() => this.postState());
+    const soundDisposable = this.timer.onDidCompleteCycle((type) => this.postPlaySound(type));
+    webviewView.onDidDispose(() => {
+      stateDisposable.dispose();
+      soundDisposable.dispose();
+    });
     this.postState();
+  }
+
+  private postPlaySound(type: 'work' | 'break') {
+    const config = vscode.workspace.getConfiguration('cut-a-while');
+    if (!config.get<boolean>('sound.enabled', true)) return;
+
+    // Windows: webview audio is blocked without panel focus — use OS beep for completion.
+    if (process.platform === 'win32') {
+      playHostCompletionSound(type);
+      return;
+    }
+
+    const theme = config.get<string>('soundTheme', 'bell');
+    const webview = this.webviewView?.webview;
+    const panelVisible = this.webviewView?.visible ?? false;
+
+    if (webview) {
+      try {
+        webview.postMessage({ command: 'playSound', type, theme });
+      } catch {
+        playHostCompletionSound(type);
+        return;
+      }
+    }
+
+    if (!webview || !panelVisible) {
+      playHostCompletionSound(type);
+    }
   }
 
   private postState() {

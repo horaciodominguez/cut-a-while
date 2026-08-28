@@ -1,88 +1,140 @@
-import { useCallback, useRef } from 'react'
-
-type SoundTheme = 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic'
+export type SoundTheme = 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic'
 
 let audioCtx: AudioContext | null = null
 
-function getAudioCtx(): AudioContext {
-  if (!audioCtx) {
-    audioCtx = new AudioContext()
-  }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume()
-  }
-  return audioCtx
-}
-
-const beep = (frequency: number, duration: number, type: OscillatorType = 'sine', volume = 0.15) => {
+async function ensureAudioCtx(): Promise<AudioContext | null> {
   try {
-    const ctx = getAudioCtx()
-    const osc = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = frequency
-    osc.type = type
-    gain.gain.setValueAtTime(volume, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
-    osc.start()
-    osc.stop(ctx.currentTime + duration)
+    if (!audioCtx) {
+      audioCtx = new AudioContext()
+    }
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume()
+    }
+    return audioCtx
   } catch {
-    // Web Audio not available
+    return null
   }
 }
 
-const noir = (freq: number, dur: number, delay: number, type: OscillatorType, vol: number) => {
-  setTimeout(() => beep(freq, dur, type, vol), delay)
+async function beep(
+  frequency: number,
+  duration: number,
+  type: OscillatorType = 'sine',
+  volume = 0.18,
+) {
+  const ctx = await ensureAudioCtx()
+  if (!ctx) return
+
+  const osc = ctx.createOscillator()
+  const gain = ctx.createGain()
+  osc.connect(gain)
+  gain.connect(ctx.destination)
+  osc.frequency.value = frequency
+  osc.type = type
+  gain.gain.setValueAtTime(volume, ctx.currentTime)
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration)
+  osc.start()
+  osc.stop(ctx.currentTime + duration)
 }
 
-const THEMES: Record<SoundTheme, { work: (() => void); break: (() => void) }> = {
+function scheduleBeep(
+  delay: number,
+  frequency: number,
+  duration: number,
+  type: OscillatorType,
+  volume: number,
+) {
+  setTimeout(() => {
+    void beep(frequency, duration, type, volume)
+  }, delay)
+}
+
+const THEMES: Record<SoundTheme, { work: () => Promise<void>; break: () => Promise<void> }> = {
   bell: {
-    work: () => { beep(880, 0.3, 'sine'); noir(1100, 0.4, 150, 'sine', 0.15) },
-    break: () => beep(660, 0.25, 'triangle'),
+    work: async () => {
+      await beep(880, 0.3, 'sine')
+      scheduleBeep(150, 1100, 0.4, 'sine', 0.18)
+    },
+    break: async () => {
+      await beep(660, 0.25, 'triangle')
+    },
   },
   digital: {
-    work: () => { beep(1000, 0.1, 'square'); noir(1200, 0.1, 100, 'square', 0.1); noir(1400, 0.15, 200, 'square', 0.1) },
-    break: () => beep(800, 0.1, 'square'),
+    work: async () => {
+      await beep(1000, 0.1, 'square')
+      scheduleBeep(100, 1200, 0.1, 'square', 0.12)
+      scheduleBeep(200, 1400, 0.15, 'square', 0.12)
+    },
+    break: async () => {
+      await beep(800, 0.1, 'square')
+    },
   },
   nature: {
-    work: () => { beep(500, 0.4, 'triangle'); noir(700, 0.3, 200, 'triangle', 0.1) },
-    break: () => beep(400, 0.35, 'triangle'),
+    work: async () => {
+      await beep(500, 0.4, 'triangle')
+      scheduleBeep(200, 700, 0.3, 'triangle', 0.12)
+    },
+    break: async () => {
+      await beep(400, 0.35, 'triangle')
+    },
   },
   zen: {
-    work: () => { beep(440, 0.8, 'sine', 0.12) },
-    break: () => beep(330, 0.6, 'sine', 0.1),
+    work: async () => {
+      await beep(440, 0.8, 'sine', 0.14)
+    },
+    break: async () => {
+      await beep(330, 0.6, 'sine', 0.12)
+    },
   },
   soft: {
-    work: () => { beep(660, 0.2, 'sine'); noir(880, 0.25, 200, 'sine', 0.1) },
-    break: () => beep(550, 0.2, 'sine'),
+    work: async () => {
+      await beep(660, 0.2, 'sine')
+      scheduleBeep(200, 880, 0.25, 'sine', 0.12)
+    },
+    break: async () => {
+      await beep(550, 0.2, 'sine')
+    },
   },
   classic: {
-    work: () => { beep(750, 0.15, 'sine'); noir(1000, 0.15, 120, 'sine', 0.15); noir(1250, 0.2, 240, 'sine', 0.15) },
-    break: () => beep(620, 0.12, 'sine'),
+    work: async () => {
+      await beep(750, 0.15, 'sine')
+      scheduleBeep(120, 1000, 0.15, 'sine', 0.18)
+      scheduleBeep(240, 1250, 0.2, 'sine', 0.18)
+    },
+    break: async () => {
+      await beep(620, 0.12, 'sine')
+    },
   },
 }
 
-export function useSound(enabled: boolean, theme: SoundTheme = 'bell') {
-  const enabledRef = useRef(enabled)
-  enabledRef.current = enabled
-  const themeRef = useRef(theme)
-  themeRef.current = theme
-
-  const playWorkComplete = useCallback(() => {
-    if (!enabledRef.current) return
-    THEMES[themeRef.current]?.work()
-  }, [])
-
-  const playBreakComplete = useCallback(() => {
-    if (!enabledRef.current) return
-    THEMES[themeRef.current]?.break()
-  }, [])
-
-  return { playWorkComplete, playBreakComplete }
+function isSoundTheme(value: string): value is SoundTheme {
+  return value in THEMES
 }
 
-export function playThemeSound(theme: SoundTheme, type: 'work' | 'break' = 'break') {
-  THEMES[theme]?.[type]()
+/** Resume AudioContext after user gesture or when the panel becomes visible again. */
+export function unlockAudio(): void {
+  void ensureAudioCtx()
 }
 
+if (typeof document !== 'undefined') {
+  document.addEventListener('pointerdown', unlockAudio, { once: false, passive: true })
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      unlockAudio()
+    }
+  })
+}
+
+export async function playCycleSound(
+  theme: string,
+  type: 'work' | 'break',
+  enabled = true,
+): Promise<void> {
+  if (!enabled) return
+  const resolved = isSoundTheme(theme) ? theme : 'bell'
+  await THEMES[resolved][type]()
+}
+
+export function playThemeSound(theme: SoundTheme, type: 'work' | 'break' = 'break', enabled = true) {
+  void playCycleSound(theme, type, enabled)
+}

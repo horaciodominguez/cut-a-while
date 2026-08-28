@@ -96,7 +96,11 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
               key={t.id}
               onClick={() => {
                 updateSetting('soundTheme', t.id)
-                playThemeSound(t.id as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic')
+                playThemeSound(
+                  t.id as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic',
+                  'break',
+                  settings.soundEnabled,
+                )
               }}
               className="text-[10px] px-2.5 py-1 rounded font-medium cursor-pointer border transition-colors"
               style={{
