@@ -28,7 +28,15 @@ External timers break concentration. Cut a While keeps work / break cycles, task
 
 ## Install
 
-From the repo (development / local `.vsix`):
+### VS Code Marketplace
+
+Search **Cut a While** in the Extensions view, or install from:
+
+`https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while`
+
+*(Link active after the first manual upload to the Marketplace.)*
+
+### From source / `.vsix`
 
 ```bash
 npm install
@@ -36,7 +44,7 @@ npm run build
 npm run package
 ```
 
-Then in VS Code: **Extensions → … → Install from VSIX…** and pick the generated `.vsix`.
+Then in VS Code: **Extensions → … → Install from VSIX…** and pick `cut-a-while-0.1.0.vsix`.
 
 Or press **F5** after `npm run build` to run an Extension Development Host.
 
@@ -113,4 +121,4 @@ Tip: after UI changes, rebuild the webview (`npm run build:webview` or `npm run 
 
 ## License
 
-Private for now (`"private": true` in `package.json`). Publisher: `horaciodominguez`.
+MIT — see [LICENSE](LICENSE). Publisher: [horaciodominguez](https://marketplace.visualstudio.com/publishers/horaciodominguez).

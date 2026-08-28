@@ -6,6 +6,9 @@ src/**
 !src/assets/icons/**
 tests/**
 .agents/**
+.opencode/**
+skills-lock.json
+public/**
 node_modules/**
 **/*.ts
 **/*.tsx

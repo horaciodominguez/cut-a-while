@@ -4,14 +4,35 @@
   "description": "Pomodoro timer for VS Code — stay focused, track your flow",
   "version": "0.1.0",
   "publisher": "horaciodominguez",
-  "icon": "src/assets/icons/container.svg",
-  "private": true,
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/horaciodominguez/cut-a-while.git"
+  },
+  "bugs": {
+    "url": "https://github.com/horaciodominguez/cut-a-while/issues"
+  },
+  "homepage": "https://github.com/horaciodominguez/cut-a-while#readme",
+  "keywords": [
+    "pomodoro",
+    "timer",
+    "focus",
+    "productivity",
+    "zen",
+    "time tracking"
+  ],
+  "galleryBanner": {
+    "color": "#1a1a1e",
+    "theme": "dark"
+  },
   "type": "module",
   "engines": {
     "vscode": "^1.98.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Productivity"
   ],
   "activationEvents": [
     "onStartupFinished"
@@ -165,7 +186,8 @@
     "build:webview": "vite build",
     "build": "npm run compile && npm run build:webview",
     "dev": "concurrently \"npm run watch\" \"npm run build:webview -- --watch\"",
-    "package": "npx vsce package",
+    "package": "vsce package",
+    "publish": "vsce publish",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
@@ -182,7 +204,7 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
-    "@types/vscode": "^1.125.0",
+    "@types/vscode": "^1.98.0",
     "@vitejs/plugin-react-swc": "^4.0.0",
     "concurrently": "^10.0.4",
     "eslint": "^9.33.0",
@@ -193,6 +215,6 @@
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
     "vitest": "^4.1.10",
-    "vsce": "^2.15.0"
+    "@vscode/vsce": "^3.7.1"
   }
 }
