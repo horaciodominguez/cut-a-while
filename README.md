@@ -3,6 +3,7 @@
 **Pomodoro for VS Code** — stay in flow without leaving the editor.
 
 [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/horaciodominguez.cut-a-while?label=VS%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while)
+[![Open VSX](https://img.shields.io/badge/Open%20VSX-horaciodominguez.cut--a--while-blue)](https://open-vsx.org/extension/horaciodominguez/cut-a-while)
 
 ![Cut a While in VS Code — timer panel, sidebar, and status bar](media/screenshot.png)
 
@@ -34,9 +35,9 @@ External timers break concentration. Cut a While keeps work / break cycles, task
 
 Search **Cut a While** in the Extensions view, or install from the [Marketplace listing](https://marketplace.visualstudio.com/items?itemName=horaciodominguez.cut-a-while).
 
-### Open VSX (Cursor / VSCodium)
+### Open VSX (Cursor / VSCodium / Antigravity)
 
-Search **Cut a While** in Cursor’s Extensions view, or install from [Open VSX](https://open-vsx.org/extension/horaciodominguez/cut-a-while) once published.
+Search **Cut a While** in Extensions, install by ID `horaciodominguez.cut-a-while`, or use the [Open VSX listing](https://open-vsx.org/extension/horaciodominguez/cut-a-while).
 
 ### GitHub Release (`.vsix`)
 
@@ -119,13 +120,13 @@ npm run lint
 npm run package    # produce .vsix via vsce
 ```
 
-**Publish to Open VSX** (Cursor / VSCodium): sign the [Publisher Agreement](https://open-vsx.org/), create namespace `horaciodominguez`, generate a token at [user settings](https://open-vsx.org/user-settings/tokens), then:
+**Publish to Open VSX** (after `npm run package`):
 
 ```bash
-npm run package
-npx ovsx create-namespace horaciodominguez -p <TOKEN>   # first time only
 npm run publish:openvsx -- -p <TOKEN>
 ```
+
+Token at [open-vsx.org/user-settings/tokens](https://open-vsx.org/user-settings/tokens).
 
 **Debug:** open this folder in VS Code → **Run and Debug** → **Run Extension** (or **F5**). A second window (**Extension Development Host**) loads the extension.
 
