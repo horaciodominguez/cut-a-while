@@ -35,6 +35,8 @@ export interface TodoItem {
 export class TimerManager implements vscode.Disposable {
   private state: TimerState;
   private tickTimer: ReturnType<typeof setTimeout> | null = null;
+  private completing = false;
+  private pendingCompletedCycle: CycleType | null = null;
   private storage: StorageManager;
   private _onDidChangeState = new vscode.EventEmitter<TimerState>();
   readonly onDidChangeState: vscode.Event<TimerState> = this._onDidChangeState.event;
@@ -47,6 +49,12 @@ export class TimerManager implements vscode.Disposable {
     this.state = this.restoreState() ?? this.getDefaultState();
     if (this.state.status === 'running' || this.state.status === 'break') {
       this.startTick();
+    }
+    // Fire after activate() wires listeners (TimerPanelProvider, etc.).
+    if (this.pendingCompletedCycle) {
+      const cycle = this.pendingCompletedCycle;
+      this.pendingCompletedCycle = null;
+      setTimeout(() => this._onDidCompleteCycle.fire(cycle), 0);
     }
   }
 
@@ -65,15 +73,11 @@ export class TimerManager implements vscode.Disposable {
     };
 
     if (state.status === 'running' || state.status === 'break') {
+      const originalTimeLeft = state.timeLeft;
       const elapsed = Math.floor((Date.now() - (savedAt || Date.now())) / 1000);
-      state.timeLeft = Math.max(0, state.timeLeft - elapsed);
+      state.timeLeft = Math.max(0, originalTimeLeft - elapsed);
       if (state.timeLeft <= 0) {
-        state.status = 'idle';
-        state.cycleType = 'work';
-        const config = this.getConfig();
-        state.timeLeft = config.workDuration;
-        state.totalTime = config.workDuration;
-        state.currentTask = '';
+        this.applyExpiredRestore(state, savedAt, originalTimeLeft);
       }
     } else if (state.status === 'stopped') {
       // Keep stopped as restored
@@ -82,6 +86,49 @@ export class TimerManager implements vscode.Disposable {
     }
 
     return state;
+  }
+
+  /** Register the finished cycle and advance to the next phase (mirrors handleCompletion). */
+  private applyExpiredRestore(
+    state: TimerState,
+    savedAt: number | undefined,
+    originalTimeLeft: number,
+  ): void {
+    const config = this.getConfig();
+    const finished = state.cycleType;
+    const endedAt =
+      typeof savedAt === 'number' ? savedAt + originalTimeLeft * 1000 : Date.now();
+
+    void this.storage
+      .pushToArray('sessions', {
+        timestamp: endedAt,
+        type: finished,
+        duration: state.totalTime,
+        task: state.currentTask,
+      })
+      .catch(() => {});
+
+    this.pendingCompletedCycle = finished;
+
+    if (finished === 'work') {
+      state.completedSessions++;
+      const isLongBreak = state.completedSessions % config.longBreakInterval === 0;
+      state.timeLeft = isLongBreak ? config.longBreakDuration : config.breakDuration;
+      state.totalTime = state.timeLeft;
+      state.status = 'break';
+      state.cycleType = 'break';
+      state.currentTask = '';
+      return;
+    }
+
+    state.timeLeft = config.workDuration;
+    state.totalTime = config.workDuration;
+    state.cycleType = 'work';
+    state.currentTask = '';
+    state.status = 'idle';
+    if (config.autoStart) {
+      state.status = 'running';
+    }
   }
 
   private getDefaultState(): TimerState {
@@ -151,7 +198,7 @@ export class TimerManager implements vscode.Disposable {
   }
 
   start(task?: string) {
-    if (this.state.status === 'running') return;
+    if (this.completing || this.state.status === 'running') return;
 
     if (task) {
       this.state.currentTask = task;
@@ -170,26 +217,29 @@ export class TimerManager implements vscode.Disposable {
   }
 
   pause() {
-    if (this.state.status !== 'running') return;
+    if (this.completing) return;
+    if (this.state.status !== 'running' && this.state.status !== 'break') return;
     this.state.status = 'paused';
     this.stopTick();
     this.emit();
   }
 
   resume() {
-    if (this.state.status !== 'paused') return;
-    this.state.status = 'running';
+    if (this.completing || this.state.status !== 'paused') return;
+    this.state.status = this.state.cycleType === 'break' ? 'break' : 'running';
     this.startTick();
     this.emit();
   }
 
   stop() {
+    if (this.completing) return;
     this.state.status = 'stopped';
     this.stopTick();
     this.emit();
   }
 
   reset() {
+    if (this.completing) return;
     this.stopTick();
     const config = this.getConfig();
     this.state = {
@@ -209,7 +259,7 @@ export class TimerManager implements vscode.Disposable {
   }
 
   skipBreak() {
-    if (this.state.status !== 'break') return;
+    if (this.completing || this.state.status !== 'break') return;
     this.state.currentTask = '';
     const config = this.getConfig();
     this.state.timeLeft = config.workDuration;
@@ -244,45 +294,52 @@ export class TimerManager implements vscode.Disposable {
   }
 
   private async handleCompletion() {
+    if (this.completing) return;
+    this.completing = true;
     this.stopTick();
 
-    const config = this.getConfig();
-    const session = {
-      timestamp: Date.now(),
-      type: this.state.cycleType,
-      duration: this.state.totalTime,
-      task: this.state.currentTask,
-    };
-    await this.storage.pushToArray('sessions', session).catch(() => {});
-    await this.saveState();
+    try {
+      const config = this.getConfig();
+      const finishedCycle = this.state.cycleType;
+      const session = {
+        timestamp: Date.now(),
+        type: finishedCycle,
+        duration: this.state.totalTime,
+        task: this.state.currentTask,
+      };
+      await this.storage.pushToArray('sessions', session).catch(() => {});
+      await this.saveState();
 
-    if (this.state.cycleType === 'work') {
-      this.state.completedSessions++;
-      const isLongBreak = this.state.completedSessions % config.longBreakInterval === 0;
-      this.state.timeLeft = isLongBreak ? config.longBreakDuration : config.breakDuration;
-      this.state.totalTime = this.state.timeLeft;
-      this.state.status = 'break';
-      this.state.cycleType = 'break';
-      this.state.currentTask = '';
-      this.startTick();
-      this._onDidCompleteCycle.fire('work');
-      this.emit();
-      return;
-    }
+      if (finishedCycle === 'work') {
+        this.state.completedSessions++;
+        const isLongBreak = this.state.completedSessions % config.longBreakInterval === 0;
+        this.state.timeLeft = isLongBreak ? config.longBreakDuration : config.breakDuration;
+        this.state.totalTime = this.state.timeLeft;
+        this.state.status = 'break';
+        this.state.cycleType = 'break';
+        this.state.currentTask = '';
+        this.startTick();
+        this._onDidCompleteCycle.fire('work');
+        this.emit();
+        return;
+      }
 
-    this.state.timeLeft = config.workDuration;
-    this.state.totalTime = config.workDuration;
-    this.state.cycleType = 'work';
-    this.state.currentTask = '';
-    this.state.status = 'idle';
-    this._onDidCompleteCycle.fire('break');
-    this.emit();
-
-    if (config.autoStart) {
-      this.state.status = 'running';
+      this.state.timeLeft = config.workDuration;
       this.state.totalTime = config.workDuration;
-      this.startTick();
+      this.state.cycleType = 'work';
+      this.state.currentTask = '';
+      this.state.status = 'idle';
+      this._onDidCompleteCycle.fire('break');
       this.emit();
+
+      if (config.autoStart) {
+        this.state.status = 'running';
+        this.state.totalTime = config.workDuration;
+        this.startTick();
+        this.emit();
+      }
+    } finally {
+      this.completing = false;
     }
   }
 

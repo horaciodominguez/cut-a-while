@@ -113,6 +113,91 @@ describe('TimerManager', () => {
     expect(timer.getState().status).toBe('stopped')
   })
 
+  it('pauses a break and resumes back to break', async () => {
+    timer.start()
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    expect(timer.getState().status).toBe('break')
+
+    timer.pause()
+    expect(timer.getState().status).toBe('paused')
+    expect(timer.getState().cycleType).toBe('break')
+
+    timer.resume()
+    expect(timer.getState().status).toBe('break')
+    expect(timer.getState().cycleType).toBe('break')
+  })
+
+  it('ignores reset while completion is in flight', async () => {
+    let release!: () => void
+    storage.pushToArray.mockImplementationOnce(
+      () => new Promise<void>((resolve) => { release = resolve }),
+    )
+
+    timer.start()
+    vi.advanceTimersByTime(25 * 60 * 1000)
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(timer.getState().status).toBe('running')
+    timer.reset()
+    expect(timer.getState().status).toBe('running')
+    expect(timer.getState().completedSessions).toBe(0)
+
+    release()
+    for (let i = 0; i < 20; i++) await Promise.resolve()
+    expect(timer.getState().status).toBe('break')
+    expect(timer.getState().completedSessions).toBe(1)
+  })
+
+  it('restores an expired work cycle as a completed session then break', () => {
+    timer.dispose()
+    const savedAt = Date.now() - 120_000
+    void storage.set('timerState', {
+      status: 'running',
+      timeLeft: 60,
+      totalTime: 25 * 60,
+      cycleType: 'work',
+      completedSessions: 0,
+      currentTask: 'late session',
+      savedAt,
+    })
+
+    const restored = new TimerManager(storage as unknown as Memento)
+    const state = restored.getState()
+    expect(state.status).toBe('break')
+    expect(state.cycleType).toBe('break')
+    expect(state.completedSessions).toBe(1)
+    expect(storage.pushToArray).toHaveBeenCalledWith(
+      'sessions',
+      expect.objectContaining({ type: 'work', task: 'late session' }),
+    )
+    restored.dispose()
+  })
+
+  it('restores an expired break to idle when autoStart is false', () => {
+    timer.dispose()
+    configStore.autoStart = false
+    void storage.set('timerState', {
+      status: 'break',
+      timeLeft: 30,
+      totalTime: 5 * 60,
+      cycleType: 'break',
+      completedSessions: 2,
+      currentTask: '',
+      savedAt: Date.now() - 120_000,
+    })
+
+    const restored = new TimerManager(storage as unknown as Memento)
+    expect(restored.getState().status).toBe('idle')
+    expect(restored.getState().cycleType).toBe('work')
+    expect(restored.getState().completedSessions).toBe(2)
+    expect(storage.pushToArray).toHaveBeenCalledWith(
+      'sessions',
+      expect.objectContaining({ type: 'break' }),
+    )
+    restored.dispose()
+  })
+
   it('resumes from paused', () => {
     timer.start()
     timer.pause()

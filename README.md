@@ -82,6 +82,7 @@ Search **Cut a While** in Settings, or edit `settings.json`:
 | `cut-a-while.longBreakDuration` | `15` | Long break (minutes) |
 | `cut-a-while.longBreakInterval` | `4` | Work sessions before a long break |
 | `cut-a-while.autoStart` | `true` | Auto-start the next cycle when one ends |
+| `cut-a-while.autoPause` | `true` | Pause when VS Code loses window focus |
 | `cut-a-while.sound.enabled` | `true` | Play a sound when a cycle completes |
 | `cut-a-while.soundTheme` | `bell` | `bell` \| `digital` \| `nature` \| `zen` \| `soft` \| `classic` |
 | `cut-a-while.zenMode` | `false` | Enter Zen Mode when focus starts |

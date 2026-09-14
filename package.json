@@ -131,6 +131,11 @@
           "default": true,
           "description": "Automatically start the next cycle when the current one ends"
         },
+        "cut-a-while.autoPause": {
+          "type": "boolean",
+          "default": true,
+          "description": "Pause the timer when VS Code loses window focus"
+        },
         "cut-a-while.sound.enabled": {
           "type": "boolean",
           "default": true,

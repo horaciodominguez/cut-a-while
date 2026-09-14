@@ -10,6 +10,7 @@ interface ExtensionSettings {
   longBreakDuration: number
   longBreakInterval: number
   autoStart: boolean
+  autoPause: boolean
   soundEnabled: boolean
   soundTheme: string
   zenMode: boolean
@@ -47,6 +48,7 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
     longBreakDuration: 15,
     longBreakInterval: 4,
     autoStart: true,
+    autoPause: true,
     soundEnabled: true,
     soundTheme: 'bell',
     zenMode: false,
@@ -85,6 +87,7 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
 
       <Section title="Behavior">
         <Toggle label="Auto-start" value={settings.autoStart} onChange={(v) => updateSetting('autoStart', v)} />
+        <Toggle label="Auto-pause" value={settings.autoPause} onChange={(v) => updateSetting('autoPause', v)} />
         <Toggle label="Zen mode" value={settings.zenMode} onChange={(v) => updateSetting('zenMode', v)} />
       </Section>
 
