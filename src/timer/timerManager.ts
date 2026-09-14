@@ -35,6 +35,8 @@ export interface TodoItem {
 export class TimerManager implements vscode.Disposable {
   private state: TimerState;
   private tickTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Wall-clock deadline for the active running/break cycle (ms since epoch). */
+  private endsAt: number | null = null;
   private completing = false;
   private pendingCompletedCycle: CycleType | null = null;
   private storage: StorageManager;
@@ -219,6 +221,7 @@ export class TimerManager implements vscode.Disposable {
   pause() {
     if (this.completing) return;
     if (this.state.status !== 'running' && this.state.status !== 'break') return;
+    this.syncTimeLeftFromWallClock();
     this.state.status = 'paused';
     this.stopTick();
     this.emit();
@@ -233,6 +236,7 @@ export class TimerManager implements vscode.Disposable {
 
   stop() {
     if (this.completing) return;
+    this.syncTimeLeftFromWallClock();
     this.state.status = 'stopped';
     this.stopTick();
     this.emit();
@@ -272,16 +276,28 @@ export class TimerManager implements vscode.Disposable {
 
   private startTick() {
     this.stopTick();
+    if (this.state.status === 'running' || this.state.status === 'break') {
+      this.endsAt = Date.now() + this.state.timeLeft * 1000;
+    }
     this.tickTimer = setTimeout(() => this.tick(), 1000);
   }
 
   private tick() {
     if (this.state.status !== 'running' && this.state.status !== 'break') return;
-    this.state.timeLeft--;
-    if (this.state.timeLeft <= 0) {
+
+    if (this.endsAt == null) {
+      this.endsAt = Date.now() + this.state.timeLeft * 1000;
+    }
+
+    const remaining = Math.max(0, Math.floor((this.endsAt - Date.now()) / 1000));
+    this.state.timeLeft = remaining;
+
+    if (remaining <= 0) {
+      this.endsAt = null;
       this.handleCompletion().catch(() => {});
       return;
     }
+
     this.emit();
     this.tickTimer = setTimeout(() => this.tick(), 1000);
   }
@@ -291,6 +307,13 @@ export class TimerManager implements vscode.Disposable {
       clearTimeout(this.tickTimer);
       this.tickTimer = null;
     }
+    this.endsAt = null;
+  }
+
+  private syncTimeLeftFromWallClock() {
+    if (this.endsAt == null) return;
+    if (this.state.status !== 'running' && this.state.status !== 'break') return;
+    this.state.timeLeft = Math.max(0, Math.floor((this.endsAt - Date.now()) / 1000));
   }
 
   private async handleCompletion() {

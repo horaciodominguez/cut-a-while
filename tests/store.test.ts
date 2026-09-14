@@ -61,8 +61,8 @@ describe('StorageManager', () => {
     storage = new StorageManager(context)
   })
 
-  it('stores and retrieves values with prefix', () => {
-    storage.set('testKey', 'hello')
+  it('stores and retrieves values with prefix', async () => {
+    await storage.set('testKey', 'hello')
     expect(context.globalState.update).toHaveBeenCalledWith('cut-a-while.testKey', 'hello')
     expect(storage.get('testKey', 'default')).toBe('hello')
   })
@@ -72,7 +72,7 @@ describe('StorageManager', () => {
   })
 
   it('pushes to array', async () => {
-    storage.set('list', ['a', 'b'])
+    await storage.set('list', ['a', 'b'])
     await storage.pushToArray('list', 'c')
     expect(storage.get('list', [])).toEqual(['a', 'b', 'c'])
   })
@@ -82,13 +82,24 @@ describe('StorageManager', () => {
     expect(storage.get('newList', [])).toEqual(['first'])
   })
 
-  it('stores and retrieves workspace scoped values', () => {
-    storage.setWorkspace('wsKey', 'workspace value')
+  it('serializes concurrent pushToArray without losing items', async () => {
+    await Promise.all([
+      storage.pushToArray('sessions', { id: 1 }),
+      storage.pushToArray('sessions', { id: 2 }),
+      storage.pushToArray('sessions', { id: 3 }),
+    ])
+    expect(storage.get('sessions', [])).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }])
+  })
+
+  it('stores and retrieves workspace scoped values', async () => {
+    await storage.setWorkspace('wsKey', 'workspace value')
     expect(context.workspaceState.update).toHaveBeenCalledWith('cut-a-while.wsKey', 'workspace value')
     expect(storage.getWorkspace('wsKey', 'default')).toBe('workspace value')
   })
 
-  it('initializes schema version on first use', () => {
+  it('initializes schema version on first use', async () => {
+    // migrate() is fire-and-forget from constructor; flush the write queue
+    await storage.set('noop', true)
     expect(context.globalState.update).toHaveBeenCalledWith('cut-a-while.schemaVersion', 1)
   })
 
@@ -102,10 +113,10 @@ describe('StorageManager', () => {
     expect(storage.getWorkspace('nonexistent', false)).toBe(false)
   })
 
-  it('overwrites existing key', () => {
-    storage.set('key', 'first')
+  it('overwrites existing key', async () => {
+    await storage.set('key', 'first')
     expect(storage.get('key', '')).toBe('first')
-    storage.set('key', 'second')
+    await storage.set('key', 'second')
     expect(storage.get('key', '')).toBe('second')
   })
 })

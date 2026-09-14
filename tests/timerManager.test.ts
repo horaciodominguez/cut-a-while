@@ -234,6 +234,15 @@ describe('TimerManager', () => {
     expect(timer.getState().timeLeft).toBe(25 * 60 - 3)
   })
 
+  it('catches up from wall-clock when a tick fires late', () => {
+    timer.start()
+    const before = timer.getState().timeLeft
+    vi.setSystemTime(Date.now() + 2500)
+    vi.runOnlyPendingTimers()
+    // Old decrement-only timer would drop 1s; wall-clock drops ~2–3s+
+    expect(timer.getState().timeLeft).toBeLessThanOrEqual(before - 2)
+  })
+
   it('transitions to break when work completes', async () => {
     timer.start('test task')
     await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
