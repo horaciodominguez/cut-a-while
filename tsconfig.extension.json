@@ -25,6 +25,7 @@
     "src/statusBar.ts",
     "src/commands.ts",
     "src/notifications.ts",
+    "src/core/**/*.ts",
     "src/timer/**/*.ts",
     "src/storage/**/*.ts",
     "src/providers/**/*.ts"

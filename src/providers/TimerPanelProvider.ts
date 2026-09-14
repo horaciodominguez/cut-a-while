@@ -1,23 +1,7 @@
 import * as vscode from 'vscode';
-import { TimerManager, type Session } from '../timer/timerManager.js';
+import { calcStreak } from '../core/utils/streak.js';
+import { TimerManager } from '../timer/timerManager.js';
 import { playHostCompletionSound } from '../hostSound.js';
-
-function calcStreak(sessions: Session[]): number {
-  const work = sessions.filter((s) => s.type === 'work');
-  if (work.length === 0) return 0;
-  const dates = new Set<number>();
-  for (const s of work) {
-    const d = new Date(s.timestamp);
-    dates.add(d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate());
-  }
-  const sorted = [...dates].sort((a, b) => b - a);
-  let streak = 1;
-  for (let i = 1; i < sorted.length; i++) {
-    if (sorted[i - 1] - sorted[i] === 1) streak++;
-    else break;
-  }
-  return streak;
-}
 
 export class TimerPanelProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'cut-a-while.timerPanel';

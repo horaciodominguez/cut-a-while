@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { calcStreak } from '../core/utils/streak.js';
 import { TimerManager, type Session } from '../timer/timerManager.js';
 import { StorageManager } from '../storage/store.js';
 
@@ -70,7 +71,7 @@ export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>
     const sessions = this.getWorkSessions();
     const todaySessions = sessions.filter((s) => isToday(s.timestamp));
     const totalMinutes = todaySessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-    const streak = this.calcStreak(sessions);
+    const streak = calcStreak(sessions);
     const longBreakInterval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
     const nextLongBreak = `${longBreakInterval - (state.completedSessions % longBreakInterval)} until long break`;
 
@@ -121,26 +122,5 @@ export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>
 
   private getWorkSessions(): Session[] {
     return this.storage.get<Session[]>('sessions', []).filter((s) => s.type === 'work');
-  }
-
-  private calcStreak(sessions: Session[]): number {
-    if (sessions.length === 0) return 0;
-    const dates = new Set<number>();
-    for (const s of sessions) {
-      const d = new Date(s.timestamp);
-      const key = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
-      dates.add(key);
-    }
-    const sorted = [...dates].sort((a, b) => b - a);
-    let streak = 1;
-    for (let i = 1; i < sorted.length; i++) {
-      const diff = sorted[i - 1] - sorted[i];
-      if (diff === 1) {
-        streak++;
-      } else {
-        break;
-      }
-    }
-    return streak;
   }
 }
