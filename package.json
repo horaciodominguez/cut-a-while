@@ -2,7 +2,7 @@
   "name": "cut-a-while",
   "displayName": "Cut a While",
   "description": "Pomodoro timer for VS Code — stay focused, track your flow",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "horaciodominguez",
   "license": "MIT",
   "icon": "media/icon.png",
