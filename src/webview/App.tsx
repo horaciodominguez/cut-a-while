@@ -108,7 +108,7 @@ function App() {
         void playCycleSound(
           typeof msg.theme === 'string' ? msg.theme : soundThemeRef.current,
           msg.type,
-          soundEnabledRef.current,
+          msg.preview === true ? true : soundEnabledRef.current,
         )
       }
     }

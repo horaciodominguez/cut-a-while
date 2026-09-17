@@ -41,6 +41,7 @@ export class CommandsManager {
         state.status === 'running' ||
         state.status === 'paused' ||
         state.status === 'break' ||
+        state.status === 'stopped' ||
         state.completedSessions > 0;
       if (needsConfirm) {
         const action = await vscode.window.showWarningMessage(

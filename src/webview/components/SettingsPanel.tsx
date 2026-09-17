@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { postMessage } from '../vscodeApi.ts'
 import { DrawerPanel } from './DrawerPanel.tsx'
 import { type AccentId, accentColor } from '../theme.ts'
-import { playThemeSound } from '../hooks/useSound.ts'
 
 interface ExtensionSettings {
   workDuration: number
@@ -15,6 +14,7 @@ interface ExtensionSettings {
   soundTheme: string
   zenMode: boolean
   accent: string
+  platform?: string
 }
 
 const ACCENTS: { id: AccentId; label: string }[] = [
@@ -53,6 +53,7 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
     soundTheme: 'bell',
     zenMode: false,
     accent: 'blue',
+    platform: undefined,
   })
 
   useEffect(() => {
@@ -103,6 +104,11 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
             Preview still plays when you pick a theme
           </p>
         )}
+        {settings.platform === 'win32' && (
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            On Windows, preview and completion use matching system beeps per theme
+          </p>
+        )}
         <div className="flex flex-wrap gap-1.5 mt-2">
           {SOUND_THEMES.map((t) => (
             <button
@@ -110,12 +116,8 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
               type="button"
               onClick={() => {
                 updateSetting('soundTheme', t.id)
-                // Preview always audible so users can hear themes even when completion sound is off
-                playThemeSound(
-                  t.id as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic',
-                  'break',
-                  true,
-                )
+                // Host preview: Windows beeps match completion; other OS → Web Audio
+                postMessage({ command: 'previewSound', theme: t.id, type: 'break' })
               }}
               className="text-[10px] px-2.5 py-1 rounded font-medium cursor-pointer border transition-colors"
               style={{

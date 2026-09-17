@@ -93,6 +93,12 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'deleteTodo':
           void this.handleDeleteTodo(message.id).catch(() => {});
           break;
+        case 'previewSound':
+          this.previewSound(
+            typeof message.theme === 'string' ? message.theme : undefined,
+            message.type === 'work' || message.type === 'break' ? message.type : 'break',
+          );
+          break;
       }
     });
 
@@ -141,6 +147,25 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     }
   }
 
+  /** Theme picker preview — always audible; on Windows matches completion (host beep). */
+  private previewSound(theme = 'bell', type: 'work' | 'break' = 'break') {
+    if (process.platform === 'win32') {
+      playHostCompletionSound(type, theme);
+      return;
+    }
+
+    const webview = this.webviewView?.webview;
+    if (!webview) {
+      playHostCompletionSound(type, theme);
+      return;
+    }
+    try {
+      webview.postMessage({ command: 'playSound', type, theme, preview: true });
+    } catch {
+      playHostCompletionSound(type, theme);
+    }
+  }
+
   private postState() {
     if (!this.webviewView) return;
     try {
@@ -169,6 +194,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           soundTheme: config.get<string>('soundTheme', 'bell'),
           zenMode: config.get<boolean>('zenMode', false),
           accent: config.get<string>('theme.accent', 'blue'),
+          platform: process.platform,
         },
       });
     } catch {

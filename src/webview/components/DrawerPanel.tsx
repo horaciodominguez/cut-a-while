@@ -65,8 +65,22 @@ export function DrawerPanel({ title, open, onClose, children }: DrawerPanelProps
       }
     }
 
+    // Pull focus back if it leaves the dialog (e.g. webview chrome).
+    const onFocusIn = (e: FocusEvent) => {
+      if (!panel) return
+      const target = e.target as Node | null
+      if (target && panel.contains(target)) return
+      const nodes = focusables()
+      const fallback = nodes[0] ?? panel
+      fallback.focus({ preventScroll: true })
+    }
+
     window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
   }, [open])
 
   const slideTransition = reduceMotion
@@ -95,7 +109,7 @@ export function DrawerPanel({ title, open, onClose, children }: DrawerPanelProps
             className="drawer-panel fixed inset-y-0 right-0 z-50 flex w-[min(280px,100%)] flex-col overflow-hidden"
             role="dialog"
             aria-modal="true"
-            aria-label={title}
+            aria-labelledby="drawer-title"
           >
             <div ref={bodyRef} className="drawer-body min-h-0 flex-1 p-5">
               <div className="mb-6 flex items-center justify-between gap-2">
