@@ -77,12 +77,12 @@ export function DrawerPanel({ title, open, onClose, children }: DrawerPanelProps
             animate={{ x: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { x: '100%' }}
             transition={slideTransition}
-            className="drawer-panel fixed top-0 right-0 z-50 h-full w-[280px] max-w-[88vw] overflow-y-auto"
+            className="drawer-panel fixed top-0 right-0 z-50 flex h-full w-[280px] max-w-[88vw] flex-col overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label={title}
           >
-            <div className="p-5">
+            <div className="drawer-body min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="drawer-title" id="drawer-title">
                   {title}

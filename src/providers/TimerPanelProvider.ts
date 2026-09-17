@@ -49,8 +49,14 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
         case 'stop':
           this.timer.stop();
           break;
+        case 'confirmStop':
+          void this.confirmStop();
+          break;
         case 'reset':
           this.timer.reset();
+          break;
+        case 'confirmReset':
+          void this.confirmReset();
           break;
         case 'setTask':
           void this.timer.setTask(message.task).catch(() => {});
@@ -213,6 +219,36 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     } catch {
       // Webview disposed — ignore
     }
+  }
+
+  private async confirmStop() {
+    const action = await vscode.window.showWarningMessage(
+      'Cut a While: Stop the current session? Progress on this cycle will be discarded.',
+      { modal: true },
+      'Stop',
+    );
+    if (action === 'Stop') {
+      this.timer.stop();
+    }
+  }
+
+  private async confirmReset() {
+    const state = this.timer.getState();
+    const needsConfirm =
+      state.status === 'running' ||
+      state.status === 'paused' ||
+      state.status === 'break' ||
+      state.status === 'stopped' ||
+      state.completedSessions > 0;
+    if (needsConfirm) {
+      const action = await vscode.window.showWarningMessage(
+        'Cut a While: Reset timer and clear session progress for this cycle?',
+        { modal: true },
+        'Reset',
+      );
+      if (action !== 'Reset') return;
+    }
+    this.timer.reset();
   }
 
   private async updateSetting(key: string, value: unknown) {

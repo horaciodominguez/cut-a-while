@@ -165,16 +165,14 @@ function App() {
 
   const confirmStop = () => {
     if (state.status === 'running' || state.status === 'paused') {
-      const ok = window.confirm('Stop the current session? Progress on this cycle will be discarded.')
-      if (!ok) return
+      send('confirmStop')
+      return
     }
     send('stop')
   }
 
   const confirmReset = () => {
-    const ok = window.confirm('Reset the timer and clear session progress for this cycle?')
-    if (!ok) return
-    send('reset')
+    send('confirmReset')
   }
 
   const pendingTodos = todos.filter((t) => !t.done)
