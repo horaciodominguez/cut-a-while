@@ -77,24 +77,24 @@ export function DrawerPanel({ title, open, onClose, children }: DrawerPanelProps
             animate={{ x: 0 }}
             exit={reduceMotion ? { opacity: 0 } : { x: '100%' }}
             transition={slideTransition}
-            className="drawer-panel fixed top-0 right-0 z-50 flex h-full w-[280px] max-w-[88vw] flex-col overflow-hidden"
+            className="drawer-panel fixed inset-y-0 right-0 z-50 flex w-[min(280px,100%)] flex-col overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label={title}
           >
-            <div className="drawer-body min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">
-              <div className="flex items-center justify-between mb-6">
+            <div className="drawer-body min-h-0 flex-1 p-5">
+              <div className="mb-6 flex items-center justify-between gap-2">
                 <h2 className="drawer-title" id="drawer-title">
                   {title}
                 </h2>
-                <button onClick={onClose} className="icon-btn" aria-label={`Close ${title}`}>
+                <button type="button" onClick={onClose} className="icon-btn shrink-0" aria-label={`Close ${title}`}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
                 </button>
               </div>
-              {children}
+              <div className="drawer-content min-w-0">{children}</div>
             </div>
           </motion.div>
         </>

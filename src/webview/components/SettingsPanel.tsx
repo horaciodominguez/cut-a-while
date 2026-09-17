@@ -164,9 +164,9 @@ function Slider({ label, value, min, max, step, onChange }: {
   label: string; value: number; min: number; max: number; step: number; onChange: (v: number) => void
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs min-w-24" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-      <div className="flex items-center gap-2 flex-1">
+    <div className="flex min-w-0 items-center justify-between gap-2">
+      <span className="shrink-0 text-xs" style={{ color: 'var(--text-secondary)', width: '7.5rem' }}>{label}</span>
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <input
           type="range"
           min={min}
@@ -174,10 +174,10 @@ function Slider({ label, value, min, max, step, onChange }: {
           step={step}
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value))}
-          className="flex-1 h-1 cursor-pointer"
+          className="h-1 min-w-0 flex-1 cursor-pointer"
           style={{ accentColor: 'var(--accent)' }}
         />
-        <span className="text-xs w-10 text-right tabular-nums" style={{ color: 'var(--text-tertiary)' }}>{value}</span>
+        <span className="w-10 shrink-0 text-right text-xs tabular-nums" style={{ color: 'var(--text-tertiary)' }}>{value}</span>
       </div>
     </div>
   )

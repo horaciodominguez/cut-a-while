@@ -31,33 +31,34 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   margin: 0;
   padding: 0;
+  height: 100%;
   background: var(--bg);
   color: var(--text);
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 ::selection {
   background: color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: var(--border-subtle);
-  border-radius: 2px;
-}
-
 /* ── Shell ── */
 .timer-shell {
   position: relative;
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 20px 20px 28px;
@@ -337,34 +338,34 @@ body {
 .drawer-panel {
   background: var(--bg);
   border-left: 1px solid var(--border-subtle);
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
+/* Single scroll surface: wheel/touch work; no visible bars (avoids Win + webkit doubles). */
 .drawer-body {
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.drawer-body:hover,
-.drawer-body:focus-within {
-  scrollbar-color: color-mix(in srgb, var(--text-tertiary) 55%, transparent) transparent;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .drawer-body::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  height: 0;
+  display: none;
 }
 
-.drawer-body::-webkit-scrollbar-track {
-  background: transparent;
+.drawer-body .flex,
+.drawer-body .space-y-3 {
+  min-width: 0;
+  max-width: 100%;
 }
 
-.drawer-body::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 999px;
-}
-
-.drawer-body:hover::-webkit-scrollbar-thumb,
-.drawer-body:focus-within::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--text-tertiary) 55%, transparent);
+.drawer-body input[type='range'] {
+  min-width: 0;
+  width: 100%;
 }
 
 .drawer-title {
