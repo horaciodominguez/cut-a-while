@@ -64,6 +64,7 @@ function App() {
   const firstStateRef = useRef(true)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundTheme, setSoundTheme] = useState('bell')
+  const [longBreakInterval, setLongBreakInterval] = useState(4)
   const [streak, setStreak] = useState(0)
   const soundEnabledRef = useRef(soundEnabled)
   const soundThemeRef = useRef(soundTheme)
@@ -92,6 +93,9 @@ function App() {
         setSoundEnabled(msg.settings.soundEnabled)
         if (msg.settings.soundTheme) setSoundTheme(msg.settings.soundTheme)
         if (msg.settings.accent) handleAccentChange(msg.settings.accent)
+        if (typeof msg.settings.longBreakInterval === 'number') {
+          setLongBreakInterval(Math.max(1, msg.settings.longBreakInterval))
+        }
       }
       if (msg.command === 'todosUpdate') setTodos(msg.todos)
       if (msg.command === 'openStats') {
@@ -159,6 +163,20 @@ function App() {
     setTodoOpen(panel === 'todo')
   }
 
+  const confirmStop = () => {
+    if (state.status === 'running' || state.status === 'paused') {
+      const ok = window.confirm('Stop the current session? Progress on this cycle will be discarded.')
+      if (!ok) return
+    }
+    send('stop')
+  }
+
+  const confirmReset = () => {
+    const ok = window.confirm('Reset the timer and clear session progress for this cycle?')
+    if (!ok) return
+    send('reset')
+  }
+
   const pendingTodos = todos.filter((t) => !t.done)
   const isBreak = state.cycleType === 'break'
   const isActive = state.status === 'running' || state.status === 'break'
@@ -217,7 +235,7 @@ function App() {
       </section>
 
       <div className="timer-meta">
-        <SessionDots completed={state.completedSessions} accent={dotsColor} />
+        <SessionDots completed={state.completedSessions} total={longBreakInterval} accent={dotsColor} />
         <StreakIndicator streak={streak} />
 
         {state.status === 'idle' && !showNewInput && pendingTodos.length > 0 && (
@@ -259,7 +277,7 @@ function App() {
               <button className="btn-primary" onClick={() => send('pause')}>
                 <IconPause /> Pause
               </button>
-              <button className="btn-ghost" onClick={() => send('stop')}>
+              <button className="btn-ghost" onClick={confirmStop}>
                 <IconStop /> Stop
               </button>
             </>
@@ -269,7 +287,7 @@ function App() {
               <button className="btn-primary" onClick={() => send('resume')}>
                 <IconPlay /> Resume
               </button>
-              <button className="btn-ghost" onClick={() => send('stop')}>
+              <button className="btn-ghost" onClick={confirmStop}>
                 <IconStop /> Stop
               </button>
             </>
@@ -280,7 +298,7 @@ function App() {
             </button>
           )}
           {state.status === 'stopped' && (
-            <button className="btn-ghost" onClick={() => send('reset')}>
+            <button className="btn-ghost" onClick={confirmReset}>
               <IconReset /> Reset
             </button>
           )}

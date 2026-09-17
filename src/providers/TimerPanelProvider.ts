@@ -53,7 +53,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           this.timer.reset();
           break;
         case 'setTask':
-          this.timer.setTask(message.task);
+          void this.timer.setTask(message.task).catch(() => {});
           break;
         case 'getState':
           this.postState();
@@ -62,7 +62,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           this.postSettings();
           break;
         case 'updateSetting':
-          this.updateSetting(message.key, message.value);
+          void this.updateSetting(message.key, message.value).catch(() => {
+            void vscode.window.showErrorMessage('Cut a While: could not save setting');
+          });
           break;
         case 'skipBreak':
           this.timer.skipBreak();
@@ -77,22 +79,29 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           this.postProjectFocus();
           break;
         case 'addTodo':
-          this.handleAddTodo(message.text);
+          void this.handleAddTodo(message.text).catch(() => {});
           break;
         case 'toggleTodo':
-          this.handleToggleTodo(message.id);
+          void this.handleToggleTodo(message.id).catch(() => {});
           break;
         case 'deleteTodo':
-          this.handleDeleteTodo(message.id);
+          void this.handleDeleteTodo(message.id).catch(() => {});
           break;
       }
     });
 
     const stateDisposable = this.timer.onDidChangeState(() => this.postState());
     const soundDisposable = this.timer.onDidCompleteCycle((type) => this.postPlaySound(type));
+    const configDisposable = vscode.workspace.onDidChangeConfiguration((e) => {
+      if (e.affectsConfiguration('cut-a-while')) {
+        this.postSettings();
+      }
+    });
     webviewView.onDidDispose(() => {
       stateDisposable.dispose();
       soundDisposable.dispose();
+      configDisposable.dispose();
+      this.webviewView = undefined;
     });
     this.postState();
   }
@@ -101,13 +110,14 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     const config = vscode.workspace.getConfiguration('cut-a-while');
     if (!config.get<boolean>('sound.enabled', true)) return;
 
+    const theme = config.get<string>('soundTheme', 'bell');
+
     // Windows: webview audio is blocked without panel focus — use OS beep for completion.
     if (process.platform === 'win32') {
-      playHostCompletionSound(type);
+      playHostCompletionSound(type, theme);
       return;
     }
 
-    const theme = config.get<string>('soundTheme', 'bell');
     const webview = this.webviewView?.webview;
     const panelVisible = this.webviewView?.visible ?? false;
 
@@ -115,13 +125,13 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       try {
         webview.postMessage({ command: 'playSound', type, theme });
       } catch {
-        playHostCompletionSound(type);
+        playHostCompletionSound(type, theme);
         return;
       }
     }
 
     if (!webview || !panelVisible) {
-      playHostCompletionSound(type);
+      playHostCompletionSound(type, theme);
     }
   }
 

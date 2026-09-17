@@ -157,7 +157,7 @@
         "cut-a-while.zenMode": {
           "type": "boolean",
           "default": false,
-          "description": "Enable Zen mode on focus start (hides sidebar, panels)"
+          "description": "Enter Zen Mode when a focus session starts (exits on pause or break)"
         },
         "cut-a-while.statusBarAlignment": {
           "type": "string",

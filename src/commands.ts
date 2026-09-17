@@ -35,7 +35,21 @@ export class CommandsManager {
       vscode.commands.executeCommand('cut-a-while.timerPanel.focus');
     });
 
-    const reset = vscode.commands.registerCommand('cut-a-while.reset', () => {
+    const reset = vscode.commands.registerCommand('cut-a-while.reset', async () => {
+      const state = this.timer.getState();
+      const needsConfirm =
+        state.status === 'running' ||
+        state.status === 'paused' ||
+        state.status === 'break' ||
+        state.completedSessions > 0;
+      if (needsConfirm) {
+        const action = await vscode.window.showWarningMessage(
+          'Cut a While: Reset timer and clear session progress for this cycle?',
+          { modal: true },
+          'Reset',
+        );
+        if (action !== 'Reset') return;
+      }
       this.timer.reset();
       Notifications.info('Timer reset');
     });

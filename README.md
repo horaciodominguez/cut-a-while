@@ -85,7 +85,7 @@ Search **Cut a While** in Settings, or edit `settings.json`:
 | `cut-a-while.autoPause` | `true` | Pause when VS Code loses window focus |
 | `cut-a-while.sound.enabled` | `true` | Play a sound when a cycle completes |
 | `cut-a-while.soundTheme` | `bell` | `bell` \| `digital` \| `nature` \| `zen` \| `soft` \| `classic` |
-| `cut-a-while.zenMode` | `false` | Enter Zen Mode when focus starts |
+| `cut-a-while.zenMode` | `false` | Enter Zen Mode on focus start (exits on pause/break) |
 | `cut-a-while.statusBarAlignment` | `right` | `left` \| `right` |
 | `cut-a-while.theme.accent` | `blue` | Accent for ring, CTA, and UI accents |
 

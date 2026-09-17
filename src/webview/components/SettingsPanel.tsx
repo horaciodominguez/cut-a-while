@@ -79,30 +79,42 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
   return (
     <DrawerPanel title="Settings" open={open} onClose={onClose}>
       <Section title="Duration">
-        <Slider label="Work (min)" value={settings.workDuration} min={1} max={120} step={1} onChange={(v) => updateSetting('workDuration', v)} />
-        <Slider label="Break (min)" value={settings.breakDuration} min={0.25} max={30} step={0.25} onChange={(v) => updateSetting('breakDuration', v)} />
-        <Slider label="Long break (min)" value={settings.longBreakDuration} min={0.25} max={60} step={0.25} onChange={(v) => updateSetting('longBreakDuration', v)} />
+        <Slider label="Work (min)" value={settings.workDuration} min={1} max={180} step={1} onChange={(v) => updateSetting('workDuration', v)} />
+        <Slider label="Break (min)" value={settings.breakDuration} min={0.25} max={60} step={0.25} onChange={(v) => updateSetting('breakDuration', v)} />
+        <Slider label="Long break (min)" value={settings.longBreakDuration} min={0.25} max={120} step={0.25} onChange={(v) => updateSetting('longBreakDuration', v)} />
         <Slider label="Interval (sessions)" value={settings.longBreakInterval} min={1} max={10} step={1} onChange={(v) => updateSetting('longBreakInterval', v)} />
       </Section>
 
       <Section title="Behavior">
         <Toggle label="Auto-start" value={settings.autoStart} onChange={(v) => updateSetting('autoStart', v)} />
         <Toggle label="Auto-pause" value={settings.autoPause} onChange={(v) => updateSetting('autoPause', v)} />
-        <Toggle label="Zen mode" value={settings.zenMode} onChange={(v) => updateSetting('zenMode', v)} />
+        <Toggle
+          label="Zen mode"
+          hint="Hides sidebar/panels while focusing; exits on pause or break"
+          value={settings.zenMode}
+          onChange={(v) => updateSetting('zenMode', v)}
+        />
       </Section>
 
       <Section title="Sound">
         <Toggle label="Enabled" value={settings.soundEnabled} onChange={(v) => updateSetting('soundEnabled', v)} />
+        {!settings.soundEnabled && (
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            Preview still plays when you pick a theme
+          </p>
+        )}
         <div className="flex flex-wrap gap-1.5 mt-2">
           {SOUND_THEMES.map((t) => (
             <button
               key={t.id}
+              type="button"
               onClick={() => {
                 updateSetting('soundTheme', t.id)
+                // Preview always audible so users can hear themes even when completion sound is off
                 playThemeSound(
                   t.id as 'bell' | 'digital' | 'nature' | 'zen' | 'soft' | 'classic',
                   'break',
-                  settings.soundEnabled,
+                  true,
                 )
               }}
               className="text-[10px] px-2.5 py-1 rounded font-medium cursor-pointer border transition-colors"
@@ -171,16 +183,33 @@ function Slider({ label, value, min, max, step, onChange }: {
   )
 }
 
-function Toggle({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({
+  label,
+  hint,
+  value,
+  onChange,
+}: {
+  label: string
+  hint?: string
+  value: boolean
+  onChange: (v: boolean) => void
+}) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+        {hint ? (
+          <p className="text-[10px] mt-0.5 leading-snug" style={{ color: 'var(--text-tertiary)' }}>{hint}</p>
+        ) : null}
+      </div>
       <button
+        type="button"
         onClick={() => onChange(!value)}
-        className="relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-200"
+        className="relative w-9 h-5 rounded-full cursor-pointer transition-colors duration-200 shrink-0"
         style={{ background: value ? 'var(--accent)' : 'var(--border-subtle)' }}
         role="switch"
         aria-checked={value}
+        aria-label={label}
       >
         <span
           className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
