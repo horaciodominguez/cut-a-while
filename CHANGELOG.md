@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.3] - 2026-09-22
+
+### Fixed
+
+- Zen Mode exits safely on pause/break/stop (no blind toggle that re-enters Zen)
+- Settings drawer scroll jump when settings sync from VS Code
+- Nested / always-visible scrollbars in the Settings drawer
+- Stop mid-session works via host confirmation (`window.confirm` is blocked in webviews)
+- Reset confirmation aligned between panel and Command Palette
+- Sound theme preview on Windows matches completion (system beeps per theme)
+
+### Added
+
+- Escape, focus trap, `aria-modal`, and reduced-motion support for drawers
+- Bidirectional settings sync (VS Code Settings ↔ panel) with aligned slider ranges
+- Session dots follow `longBreakInterval`
+- Confirmation dialogs for destructive Stop and Reset
+
 ## [0.1.2] - 2026-09-14
 
 ### Fixed

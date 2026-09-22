@@ -23,6 +23,7 @@ eslint.config.js
 .git/**
 *.vsix
 .cursor/**
+RELEASE_NOTES*.md
 screenshots/**
 scripts/**
 !media/**
