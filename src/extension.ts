@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   const treeProvider = new TimerTreeProvider(timer, storage);
   context.subscriptions.push(
+    treeProvider,
     vscode.window.registerTreeDataProvider('cut-a-while.timerTree', treeProvider),
   );
 

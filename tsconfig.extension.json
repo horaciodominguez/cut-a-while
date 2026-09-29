@@ -25,10 +25,17 @@
     "src/statusBar.ts",
     "src/commands.ts",
     "src/notifications.ts",
+    "src/autoPauseManager.ts",
+    "src/fileFocusTracker.ts",
+    "src/projectFocusTracker.ts",
+    "src/zenModeManager.ts",
+    "src/hostSound.ts",
     "src/core/**/*.ts",
     "src/timer/**/*.ts",
     "src/storage/**/*.ts",
-    "src/providers/**/*.ts"
+    "src/providers/**/*.ts",
+    "src/treeView/**/*.ts",
+    "src/shared/**/*.ts"
   ],
   "exclude": ["src/webview", "node_modules"]
 }

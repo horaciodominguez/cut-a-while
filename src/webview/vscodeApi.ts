@@ -1,3 +1,5 @@
+import type { WebviewToHostMessage } from '../shared/messages.ts'
+
 declare global {
   function acquireVsCodeApi(): {
     postMessage: (msg: unknown) => void
@@ -8,7 +10,7 @@ declare global {
 
 const api = acquireVsCodeApi()
 
-export function postMessage(msg: Record<string, unknown>) {
+export function postMessage(msg: WebviewToHostMessage) {
   api.postMessage(msg)
 }
 

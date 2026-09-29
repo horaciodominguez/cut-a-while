@@ -195,7 +195,8 @@
     "publish:openvsx": "ovsx publish",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.extension.json --noEmit && tsc -p tsconfig.webview.json --noEmit"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12",

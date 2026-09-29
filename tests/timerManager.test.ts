@@ -198,6 +198,27 @@ describe('TimerManager', () => {
     restored.dispose()
   })
 
+  it('restores a mid-cycle running timer with remaining time', () => {
+    timer.dispose()
+    void storage.set('timerState', {
+      status: 'running',
+      timeLeft: 100,
+      totalTime: 25 * 60,
+      cycleType: 'work',
+      completedSessions: 1,
+      currentTask: 'still going',
+      savedAt: Date.now() - 10_000,
+    })
+
+    const restored = new TimerManager(storage as unknown as Memento)
+    expect(restored.getState().status).toBe('running')
+    expect(restored.getState().cycleType).toBe('work')
+    expect(restored.getState().timeLeft).toBe(90)
+    expect(restored.getState().currentTask).toBe('still going')
+    expect(storage.pushToArray).not.toHaveBeenCalled()
+    restored.dispose()
+  })
+
   it('resumes from paused', () => {
     timer.start()
     timer.pause()

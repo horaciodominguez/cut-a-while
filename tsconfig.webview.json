@@ -19,5 +19,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/webview", "src/core"]
+  "include": ["src/webview", "src/core", "src/shared"]
 }

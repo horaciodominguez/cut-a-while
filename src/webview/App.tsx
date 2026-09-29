@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { formatSecondsToTime } from '../core/utils/time.ts'
+import type { WebviewToHostMessage } from '../shared/messages.ts'
 import { TimerArc } from './components/TimerArc.tsx'
 import { SessionDots } from './components/SessionDots.tsx'
 import { IconPlay, IconPause, IconStop, IconReset, IconSkip, IconSettings, IconStats, IconTodo } from './components/Icons.tsx'
@@ -137,13 +138,13 @@ function App() {
     prevCycleRef.current = state.cycleType
   }, [state.completedSessions, state.cycleType])
 
-  const send = useCallback((command: string, payload?: Record<string, unknown>) => {
-    postMessage({ command, ...payload })
+  const send = useCallback((msg: WebviewToHostMessage) => {
+    postMessage(msg)
   }, [])
 
   const handleStart = (taskText?: string) => {
     if (state.status === 'break') {
-      send('skipBreak')
+      send({ command: 'skipBreak' })
       setTask('')
       return
     }
@@ -151,9 +152,9 @@ function App() {
     if (t) {
       const exists = todos.some((td) => td.text === t && !td.done)
       if (!exists) postMessage({ command: 'addTodo', text: t })
-      send('setTask', { task: t })
+      send({ command: 'setTask', task: t })
     }
-    send('start', { task: t || undefined })
+    send(t ? { command: 'start', task: t } : { command: 'start' })
     setShowNewInput(false)
   }
 
@@ -165,14 +166,14 @@ function App() {
 
   const confirmStop = () => {
     if (state.status === 'running' || state.status === 'paused') {
-      send('confirmStop')
+      send({ command: 'confirmStop' })
       return
     }
-    send('stop')
+    send({ command: 'stop' })
   }
 
   const confirmReset = () => {
-    send('confirmReset')
+    send({ command: 'confirmReset' })
   }
 
   const pendingTodos = todos.filter((t) => !t.done)
@@ -272,7 +273,7 @@ function App() {
           )}
           {state.status === 'running' && (
             <>
-              <button className="btn-primary" onClick={() => send('pause')}>
+              <button className="btn-primary" onClick={() => send({ command: 'pause' })}>
                 <IconPause /> Pause
               </button>
               <button className="btn-ghost" onClick={confirmStop}>
@@ -282,7 +283,7 @@ function App() {
           )}
           {state.status === 'paused' && (
             <>
-              <button className="btn-primary" onClick={() => send('resume')}>
+              <button className="btn-primary" onClick={() => send({ command: 'resume' })}>
                 <IconPlay /> Resume
               </button>
               <button className="btn-ghost" onClick={confirmStop}>

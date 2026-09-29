@@ -1,7 +1,12 @@
 import * as vscode from 'vscode';
 import { calcStreak } from '../core/utils/streak.js';
+import {
+  playHostCompletionSound,
+  resolveCompletionSoundRoute,
+  resolvePreviewSoundRoute,
+} from '../hostSound.js';
+import { isWebviewToHostMessage, type HostToWebviewMessage } from '../shared/messages.js';
 import { TimerManager } from '../timer/timerManager.js';
-import { playHostCompletionSound } from '../hostSound.js';
 
 export class TimerPanelProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'cut-a-while.timerPanel';
@@ -19,7 +24,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       this.webviewView.show?.(true);
-      this.webviewView.webview.postMessage({ command: 'openStats' });
+      this.post({ command: 'openStats' });
     } catch {
       // Webview disposed — ignore
     }
@@ -35,7 +40,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.html = this.getWebviewHtml(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((message) => {
+    const messageDisposable = webviewView.webview.onDidReceiveMessage((message: unknown) => {
+      if (!isWebviewToHostMessage(message)) return;
       switch (message.command) {
         case 'start':
           this.timer.start(message.task);
@@ -50,13 +56,13 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           this.timer.stop();
           break;
         case 'confirmStop':
-          void this.confirmStop();
+          void this.confirmStop().catch(() => {});
           break;
         case 'reset':
           this.timer.reset();
           break;
         case 'confirmReset':
-          void this.confirmReset();
+          void this.confirmReset().catch(() => {});
           break;
         case 'setTask':
           void this.timer.setTask(message.task).catch(() => {});
@@ -94,10 +100,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           void this.handleDeleteTodo(message.id).catch(() => {});
           break;
         case 'previewSound':
-          this.previewSound(
-            typeof message.theme === 'string' ? message.theme : undefined,
-            message.type === 'work' || message.type === 'break' ? message.type : 'break',
-          );
+          this.previewSound(message.theme, message.type === 'work' ? 'work' : 'break');
           break;
       }
     });
@@ -110,6 +113,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       }
     });
     webviewView.onDidDispose(() => {
+      messageDisposable.dispose();
       stateDisposable.dispose();
       soundDisposable.dispose();
       configDisposable.dispose();
@@ -118,49 +122,43 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     this.postState();
   }
 
+  private post(message: HostToWebviewMessage) {
+    this.webviewView?.webview.postMessage(message);
+  }
+
   private postPlaySound(type: 'work' | 'break') {
     const config = vscode.workspace.getConfiguration('cut-a-while');
-    if (!config.get<boolean>('sound.enabled', true)) return;
-
     const theme = config.get<string>('soundTheme', 'bell');
+    const hasWebview = !!this.webviewView?.webview;
+    const route = resolveCompletionSoundRoute({
+      enabled: config.get<boolean>('sound.enabled', true),
+      platform: process.platform,
+      hasWebview,
+      panelVisible: this.webviewView?.visible ?? false,
+    });
 
-    // Windows: webview audio is blocked without panel focus — use OS beep for completion.
-    if (process.platform === 'win32') {
+    if (route === 'silent') return;
+    if (route === 'host' || route === 'both') {
       playHostCompletionSound(type, theme);
-      return;
     }
-
-    const webview = this.webviewView?.webview;
-    const panelVisible = this.webviewView?.visible ?? false;
-
-    if (webview) {
+    if (route === 'webview' || route === 'both') {
       try {
-        webview.postMessage({ command: 'playSound', type, theme });
+        this.post({ command: 'playSound', type, theme });
       } catch {
-        playHostCompletionSound(type, theme);
-        return;
+        if (route !== 'both') playHostCompletionSound(type, theme);
       }
-    }
-
-    if (!webview || !panelVisible) {
-      playHostCompletionSound(type, theme);
     }
   }
 
   /** Theme picker preview — always audible; on Windows matches completion (host beep). */
   private previewSound(theme = 'bell', type: 'work' | 'break' = 'break') {
-    if (process.platform === 'win32') {
-      playHostCompletionSound(type, theme);
-      return;
-    }
-
-    const webview = this.webviewView?.webview;
-    if (!webview) {
+    const route = resolvePreviewSoundRoute(process.platform, !!this.webviewView?.webview);
+    if (route === 'host') {
       playHostCompletionSound(type, theme);
       return;
     }
     try {
-      webview.postMessage({ command: 'playSound', type, theme, preview: true });
+      this.post({ command: 'playSound', type, theme, preview: true });
     } catch {
       playHostCompletionSound(type, theme);
     }
@@ -171,7 +169,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     try {
       const state = this.timer.getState();
       const sessions = this.timer.getSessions();
-      this.webviewView.webview.postMessage({ command: 'stateUpdate', ...state, streak: calcStreak(sessions) });
+      this.post({ command: 'stateUpdate', ...state, streak: calcStreak(sessions) });
     } catch {
       // Webview disposed — ignore
     }
@@ -181,7 +179,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       const config = vscode.workspace.getConfiguration('cut-a-while');
-      this.webviewView.webview.postMessage({
+      this.post({
         command: 'settingsUpdate',
         settings: {
           workDuration: config.get<number>('workDuration', 25),
@@ -206,7 +204,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       const sessions = this.timer.getSessions();
-      this.webviewView.webview.postMessage({ command: 'sessionsUpdate', sessions });
+      this.post({ command: 'sessionsUpdate', sessions });
     } catch {
       // Webview disposed — ignore
     }
@@ -216,7 +214,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       const todos = this.timer.getTodos();
-      this.webviewView.webview.postMessage({ command: 'todosUpdate', todos });
+      this.post({ command: 'todosUpdate', todos });
     } catch {
       // Webview disposed — ignore
     }
@@ -241,7 +239,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     if (!this.webviewView) return;
     try {
       const data = this.timer.getProjectFocusTimes();
-      this.webviewView.webview.postMessage({ command: 'projectFocusUpdate', projects: data });
+      this.post({ command: 'projectFocusUpdate', projects: data });
     } catch {
       // Webview disposed — ignore
     }

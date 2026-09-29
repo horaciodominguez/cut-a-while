@@ -38,21 +38,51 @@ function formatTime(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
-export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem> {
+const TREE_REFRESH_MS = 1000;
+
+export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>, vscode.Disposable {
   private _onDidChangeTreeData = new vscode.EventEmitter<TimerTreeItem | undefined>();
   readonly onDidChangeTreeData: vscode.Event<TimerTreeItem | undefined> = this._onDidChangeTreeData.event;
 
   private timer: TimerManager;
   private storage: StorageManager;
+  private stateDisposable: vscode.Disposable;
+  private refreshTimer: ReturnType<typeof setTimeout> | undefined;
+  private lastRefresh = 0;
 
   constructor(timer: TimerManager, storage: StorageManager) {
     this.timer = timer;
     this.storage = storage;
-    timer.onDidChangeState(() => this.refresh());
+    this.stateDisposable = timer.onDidChangeState(() => this.refresh());
   }
 
+  /** At most one tree rebuild per second; bursts from completion coalesce. */
   refresh() {
+    const now = Date.now();
+    const elapsed = now - this.lastRefresh;
+    if (elapsed >= TREE_REFRESH_MS) {
+      this.flushRefresh();
+      return;
+    }
+    if (this.refreshTimer) return;
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = undefined;
+      this.flushRefresh();
+    }, TREE_REFRESH_MS - elapsed);
+  }
+
+  private flushRefresh() {
+    this.lastRefresh = Date.now();
     this._onDidChangeTreeData.fire(undefined);
+  }
+
+  dispose() {
+    if (this.refreshTimer) {
+      clearTimeout(this.refreshTimer);
+      this.refreshTimer = undefined;
+    }
+    this.stateDisposable.dispose();
+    this._onDidChangeTreeData.dispose();
   }
 
   getTreeItem(element: TimerTreeItem): vscode.TreeItem {

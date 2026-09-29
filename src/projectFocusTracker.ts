@@ -7,26 +7,30 @@ export class ProjectFocusTracker implements vscode.Disposable {
   private currentProject = '';
   private lastTimeLeft = 0;
   private wasRunning = false;
+  private subscriptions: vscode.Disposable[] = [];
 
   constructor(timer: TimerManager, storage: StorageManager) {
     this.storage = storage;
 
     this.updateProject();
-    timer.onDidChangeState((state) => {
-      if (state.status === 'running') {
-        if (this.wasRunning && this.currentProject && this.lastTimeLeft > 0) {
-          const elapsed = this.lastTimeLeft - state.timeLeft;
-          if (elapsed > 0) {
-            this.accumulate(elapsed);
+    this.subscriptions.push(
+      timer.onDidChangeState((state) => {
+        if (state.status === 'running') {
+          if (this.wasRunning && this.currentProject && this.lastTimeLeft > 0) {
+            const elapsed = this.lastTimeLeft - state.timeLeft;
+            if (elapsed > 0) {
+              this.accumulate(elapsed);
+            }
           }
+          this.lastTimeLeft = state.timeLeft;
+          this.wasRunning = true;
+        } else {
+          this.lastTimeLeft = 0;
+          this.wasRunning = false;
         }
-        this.lastTimeLeft = state.timeLeft;
-        this.wasRunning = true;
-      } else {
-        this.lastTimeLeft = 0;
-        this.wasRunning = false;
-      }
-    });
+      }),
+      vscode.workspace.onDidChangeWorkspaceFolders(() => this.updateProject()),
+    );
   }
 
   private updateProject() {
@@ -38,7 +42,7 @@ export class ProjectFocusTracker implements vscode.Disposable {
     if (!this.currentProject) return;
     const data = this.storage.get<Record<string, number>>('projectFocus', {});
     data[this.currentProject] = (data[this.currentProject] || 0) + seconds;
-    this.storage.set('projectFocus', data);
+    void this.storage.set('projectFocus', data).catch(() => {});
   }
 
   getProjectTime(project: string): number {
@@ -50,5 +54,10 @@ export class ProjectFocusTracker implements vscode.Disposable {
     return this.storage.get<Record<string, number>>('projectFocus', {});
   }
 
-  dispose() {}
+  dispose() {
+    for (const disposable of this.subscriptions) {
+      disposable.dispose();
+    }
+    this.subscriptions = [];
+  }
 }
