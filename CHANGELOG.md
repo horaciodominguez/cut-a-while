@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-09-28
+
+### Added
+
+- Activity Bar overview with **Open Timer Panel** and Start / Pause (the sidebar is no longer the timer itself)
+- Task chips select a task; **Start** begins the session, and the task stays editable while focusing
+- Mac shortcut `Cmd+Shift+T` for Start / Pause
+- Keyboard-visible task delete, `aria-pressed` on panel drawers, and a live region when the phase changes
+
+### Fixed
+
+- Focus tracker, tree, and timer panel release their listeners when the extension disposes
+- Windows completion beeps time out and no longer stack on top of each other
+
 ## [0.1.3] - 2026-09-22
 
 ### Fixed

@@ -42,7 +42,7 @@ Search **Cut a While** in Extensions, install by ID `horaciodominguez.cut-a-whil
 
 ### GitHub Release (`.vsix`)
 
-Download `cut-a-while-0.1.3.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
+Download `cut-a-while-0.1.4.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
 
 ### From source
 
@@ -52,7 +52,7 @@ npm run build
 npm run package
 ```
 
-Then install the generated `cut-a-while-0.1.3.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
+Then install the generated `cut-a-while-0.1.4.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
 
 ## Usage
 
