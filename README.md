@@ -19,8 +19,9 @@ External timers break concentration. Cut a While keeps work / break cycles, task
 
 - **Pomodoro cycles** — work, short break, and long break (defaults 25 / 5 / 15)
 - **Status bar** — live countdown; click to open the panel
+- **Activity Bar** — overview (streak, today, time left). The timer itself is the **Timer Panel**
 - **Timer panel** — editorial UI with progress arc, session dots, and streak
-- **Tasks** — quick chips and a todo drawer tied to your focus sessions
+- **Tasks** — chips select a task; **Start** begins the session. The task stays editable while focusing
 - **Stats** — today / week / totals, 7-day chart, top tasks, project focus time
 - **Sounds** — six completion themes (bell, digital, nature, zen, soft, classic)
 - **Accent color** — blue, purple, green, pink, orange, or teal
@@ -55,16 +56,16 @@ Then install the generated `cut-a-while-0.1.3.vsix` as above, or press **F5** af
 
 ## Usage
 
-1. Open the **Cut a While** icon in the Activity Bar, or the **Timer Panel** in the bottom panel.
-2. Optionally type what you’re working on.
-3. Press **Start**, or use the shortcut below.
+1. Open **Cut a While** in the Activity Bar and choose **Open Timer Panel** (or the title-bar icon). The sidebar is an overview; the timer UI is the bottom **Timer Panel**. You can also click the status-bar countdown.
+2. Pick a task chip or type what you’re working on. A chip only selects the task.
+3. Press **Start**, or use the shortcut below. You can edit the task while the session is running.
 4. When the cycle ends, take your break — or skip it from the panel.
 
 ### Commands
 
 | Command | Default shortcut |
 |---------|------------------|
-| **Cut a While: Start / Pause Timer** | `Ctrl+Shift+T` (when not typing in an editor) |
+| **Cut a While: Start / Pause Timer** | `Ctrl+Shift+T` / `Cmd+Shift+T` (when not typing in an editor) |
 | **Cut a While: Show Timer Panel** | — |
 | **Cut a While: Reset Timer** | — |
 | **Cut a While: Show Statistics** | — |
@@ -90,6 +91,14 @@ Search **Cut a While** in Settings, or edit `settings.json`:
 | `cut-a-while.theme.accent` | `blue` | Accent for ring, CTA, and UI accents |
 
 Most of these are also editable from the in-panel **Settings** drawer.
+
+## Limits
+
+- The Activity Bar view is an **overview**. Start, pause, and settings live in the **Timer Panel** (bottom) or via **Cut a While: Show Timer Panel**.
+- **Auto-pause** (`cut-a-while.autoPause`, default on) pauses focus and breaks when the window loses focus, then asks to resume.
+- **Zen Mode** turns on for a running focus session and turns off on pause, break, or stop.
+- On **Windows**, completion and theme preview use system beeps (one pattern per theme). On other platforms, the panel plays Web Audio when it is visible.
+- Task chips **select** a task. The session starts only when you press **Start**.
 
 ## Architecture
 

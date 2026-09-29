@@ -252,10 +252,16 @@ body {
   transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
 
-.task-chip:hover {
+.task-chip:hover,
+.task-chip.is-selected {
   border-color: var(--border);
   color: var(--text);
   background: var(--bg-elevated);
+}
+
+.task-chip.is-selected {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  color: var(--accent);
 }
 
 .task-chip-new {

@@ -143,7 +143,24 @@ export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>
       new TimerTreeItem('Current', vscode.TreeItemCollapsibleState.None, `${streak} day${streak !== 1 ? 's' : ''}`, 'flame'),
     ];
 
+    const toggleLabel =
+      state.status === 'running' ? 'Pause' : state.status === 'break' ? 'Skip break' : 'Start';
+
     return [
+      new TimerTreeItem(
+        'Open Timer Panel',
+        vscode.TreeItemCollapsibleState.None,
+        'The timer UI is the bottom panel',
+        'open-preview',
+        { command: 'cut-a-while.showPanel', title: 'Open Timer Panel' },
+      ),
+      new TimerTreeItem(
+        toggleLabel,
+        vscode.TreeItemCollapsibleState.None,
+        undefined,
+        state.status === 'running' ? 'debug-pause' : 'play',
+        { command: 'cut-a-while.toggle', title: 'Start / Pause' },
+      ),
       new TimerTreeItem('Current Session', vscode.TreeItemCollapsibleState.Expanded, undefined, 'zap', undefined, sessionChildren),
       new TimerTreeItem('Today', vscode.TreeItemCollapsibleState.Expanded, undefined, 'calendar', undefined, todayChildren),
       new TimerTreeItem('Streak', vscode.TreeItemCollapsibleState.Collapsed, undefined, 'dashboard', undefined, streakChildren),

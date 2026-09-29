@@ -149,7 +149,7 @@ function TodoRow({
       </span>
       <button
         onClick={onDelete}
-        className="p-0.5 rounded opacity-0 group-hover:opacity-100 cursor-pointer icon-btn"
+        className="p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer icon-btn"
         style={{ width: 22, height: 22 }}
         aria-label="Delete task"
       >

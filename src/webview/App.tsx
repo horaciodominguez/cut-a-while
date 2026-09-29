@@ -57,12 +57,12 @@ function App() {
   const [statsOpen, setStatsOpen] = useState(false)
   const [todoOpen, setTodoOpen] = useState(false)
   const [todos, setTodos] = useState<TodoItem[]>([])
-  const [showNewInput, setShowNewInput] = useState(false)
   const [accent, setAccent] = useState('blue')
   const [pulse, setPulse] = useState(false)
   const prevCompletedRef = useRef(state.completedSessions)
   const prevCycleRef = useRef(state.cycleType)
   const firstStateRef = useRef(true)
+  const taskInputRef = useRef<HTMLInputElement>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundTheme, setSoundTheme] = useState('bell')
   const [longBreakInterval, setLongBreakInterval] = useState(4)
@@ -138,6 +138,11 @@ function App() {
     prevCycleRef.current = state.cycleType
   }, [state.completedSessions, state.cycleType])
 
+  useEffect(() => {
+    if (document.activeElement === taskInputRef.current) return
+    setTask(state.currentTask)
+  }, [state.currentTask])
+
   const send = useCallback((msg: WebviewToHostMessage) => {
     postMessage(msg)
   }, [])
@@ -155,7 +160,13 @@ function App() {
       send({ command: 'setTask', task: t })
     }
     send(t ? { command: 'start', task: t } : { command: 'start' })
-    setShowNewInput(false)
+  }
+
+  const commitTaskEdit = () => {
+    if (state.status !== 'running' && state.status !== 'paused') return
+    const t = task.trim()
+    if (t === state.currentTask) return
+    send({ command: 'setTask', task: t })
   }
 
   const openPanel = (panel: 'settings' | 'stats' | 'todo') => {
@@ -190,13 +201,13 @@ function App() {
       <header className="timer-header">
         <span className="wordmark">Cut a While</span>
         <nav className="header-actions" aria-label="Panel navigation">
-          <button className="icon-btn" onClick={() => openPanel('settings')} aria-label="Settings">
+          <button className="icon-btn" onClick={() => openPanel('settings')} aria-label="Settings" aria-pressed={settingsOpen}>
             <IconSettings />
           </button>
-          <button className="icon-btn" onClick={() => openPanel('stats')} aria-label="Stats">
+          <button className="icon-btn" onClick={() => openPanel('stats')} aria-label="Stats" aria-pressed={statsOpen}>
             <IconStats />
           </button>
-          <button className="icon-btn" onClick={() => openPanel('todo')} aria-label="Tasks">
+          <button className="icon-btn" onClick={() => openPanel('todo')} aria-label="Tasks" aria-pressed={todoOpen}>
             <IconTodo />
           </button>
         </nav>
@@ -226,6 +237,7 @@ function App() {
             <span
               className={`timer-phase ${isActive ? 'is-active' : ''}`}
               style={{ '--phase-color': phaseColor } as CSSProperties}
+              aria-live="polite"
             >
               {STATUS_LABELS[state.status]}
             </span>
@@ -237,32 +249,41 @@ function App() {
         <SessionDots completed={state.completedSessions} total={longBreakInterval} accent={dotsColor} />
         <StreakIndicator streak={streak} />
 
-        {state.status === 'idle' && !showNewInput && pendingTodos.length > 0 && (
+        {(state.status === 'idle' || state.status === 'stopped') && pendingTodos.length > 0 && (
           <div className="task-chips">
             {pendingTodos.slice(0, 5).map((td) => (
-              <button key={td.id} className="task-chip" onClick={() => handleStart(td.text)}>
+              <button
+                key={td.id}
+                type="button"
+                className={`task-chip${task === td.text ? ' is-selected' : ''}`}
+                aria-pressed={task === td.text}
+                onClick={() => setTask(td.text)}
+              >
                 {td.text}
               </button>
             ))}
-            <button className="task-chip task-chip-new" onClick={() => setShowNewInput(true)}>
-              + new
-            </button>
           </div>
         )}
 
-        {state.status === 'idle' && (showNewInput || pendingTodos.length === 0) && (
+        {state.status !== 'break' && (
           <input
+            ref={taskInputRef}
             type="text"
             value={task}
             onChange={(e) => setTask(e.target.value)}
+            onBlur={commitTaskEdit}
             placeholder="What are you working on?"
             className="task-input"
-            onKeyDown={(e) => e.key === 'Enter' && handleStart()}
+            aria-label="Current task"
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return
+              if (state.status === 'running' || state.status === 'paused') {
+                commitTaskEdit()
+                return
+              }
+              handleStart()
+            }}
           />
-        )}
-
-        {state.status === 'running' && state.currentTask && (
-          <p className="task-label">{state.currentTask}</p>
         )}
 
         <div className="timer-actions">

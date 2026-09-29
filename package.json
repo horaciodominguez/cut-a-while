@@ -59,7 +59,7 @@
         {
           "type": "tree",
           "id": "cut-a-while.timerTree",
-          "name": "Timer"
+          "name": "Overview"
         }
       ],
       "cut-a-while-panel": [
@@ -73,7 +73,8 @@
     "commands": [
       {
         "command": "cut-a-while.showPanel",
-        "title": "Cut a While: Show Timer Panel"
+        "title": "Cut a While: Show Timer Panel",
+        "icon": "$(open-preview)"
       },
       {
         "command": "cut-a-while.toggle",
@@ -92,9 +93,24 @@
       {
         "command": "cut-a-while.toggle",
         "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
         "when": "!textInputFocus"
       }
     ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cut-a-while.showPanel",
+          "when": "view == cut-a-while.timerTree",
+          "group": "navigation"
+        },
+        {
+          "command": "cut-a-while.toggle",
+          "when": "view == cut-a-while.timerTree",
+          "group": "navigation@1"
+        }
+      ]
+    },
     "configuration": {
       "title": "Cut a While",
       "properties": {
