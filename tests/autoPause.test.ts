@@ -130,12 +130,76 @@ describe('AutoPauseManager', () => {
   })
 
   it('resumes after the user confirms on focus', async () => {
-    timer.start()
+    const { Notifications } = await import('../src/notifications.js')
+    timer.start('focus task')
+    vi.advanceTimersByTime(3000)
+    const left = timer.getState().timeLeft
     blur()
-    expect(timer.getState().status).toBe('paused')
+    expect(timer.getState()).toMatchObject({ status: 'paused', cycleType: 'work', timeLeft: left, currentTask: 'focus task' })
     focus()
     await vi.waitFor(() => {
       expect(timer.getState().status).toBe('running')
     })
+    expect(timer.getState().timeLeft).toBe(left)
+    expect(timer.getState().currentTask).toBe('focus task')
+    expect(Notifications.confirm).toHaveBeenCalledTimes(1)
+    expect(Notifications.confirm).toHaveBeenCalledWith(
+      'Focus time paused while you were away. Resume?',
+      'Resume',
+    )
+  })
+
+  it('resumes a paused break back to the break, not a new focus', async () => {
+    const { Notifications } = await import('../src/notifications.js')
+    timer.start('reading')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    const left = timer.getState().timeLeft
+    blur()
+    focus()
+    await vi.waitFor(() => {
+      expect(timer.getState().status).toBe('break')
+    })
+    expect(timer.getState()).toMatchObject({
+      status: 'break',
+      cycleType: 'break',
+      timeLeft: left,
+      currentTask: 'reading',
+    })
+    expect(Notifications.confirm).toHaveBeenCalledWith(
+      'Break paused while you were away. Resume?',
+      'Resume',
+    )
+  })
+
+  it('does not ask again when the session was already resumed', async () => {
+    const { Notifications } = await import('../src/notifications.js')
+    const confirm = vi.mocked(Notifications.confirm)
+    confirm.mockClear()
+    timer.start()
+    blur()
+    timer.resume()
+    focus()
+    await Promise.resolve()
+    expect(confirm).not.toHaveBeenCalled()
+    expect(timer.getState().status).toBe('running')
+  })
+
+  it('asks again on the next focus if Resume was dismissed', async () => {
+    const { Notifications } = await import('../src/notifications.js')
+    const confirm = vi.mocked(Notifications.confirm)
+    confirm.mockClear()
+    confirm.mockResolvedValueOnce(undefined).mockResolvedValueOnce('Resume')
+
+    timer.start()
+    blur()
+    focus()
+    await Promise.resolve()
+    expect(timer.getState().status).toBe('paused')
+
+    focus()
+    await vi.waitFor(() => {
+      expect(timer.getState().status).toBe('running')
+    })
+    expect(Notifications.confirm).toHaveBeenCalledTimes(2)
   })
 })

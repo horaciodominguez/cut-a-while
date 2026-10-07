@@ -37,7 +37,7 @@ export function TimerArc({ timeLeft, totalTime, stroke, status, pulse }: TimerAr
 
   return (
     <svg
-      className="block"
+      className="timer-arc"
       width="240"
       height="200"
       viewBox="0 0 240 200"

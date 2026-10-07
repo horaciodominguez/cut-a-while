@@ -9,6 +9,8 @@ import { FileFocusTracker } from './fileFocusTracker.js';
 import { ZenModeManager } from './zenModeManager.js';
 import { AutoPauseManager } from './autoPauseManager.js';
 import { ProjectFocusTracker } from './projectFocusTracker.js';
+import { Notifications } from './notifications.js';
+import { completionNotice } from './core/utils/time.js';
 
 export function activate(context: vscode.ExtensionContext) {
   const storage = new StorageManager(context);
@@ -42,6 +44,11 @@ export function activate(context: vscode.ExtensionContext) {
 
   const projectFocus = new ProjectFocusTracker(timer, storage);
   context.subscriptions.push(projectFocus);
+
+  context.subscriptions.push(timer.onDidCompleteCycle((finished) => {
+    const interval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
+    Notifications.info(completionNotice(finished, timer.getState(), interval));
+  }));
 
   context.subscriptions.push(timer);
   context.subscriptions.push(statusBar);

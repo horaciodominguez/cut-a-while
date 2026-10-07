@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.5] - 2026-10-06
+
+### Changed
+
+- Start / Pause pauses a break and resumes a paused session. Skipping a break stays on the panel button **Start next focus**
+- A break shows Pause, Stop, and Start next focus. The phase says **Long break** when that break is the long one
+- The task name stays through the break and the next focus. Start no longer creates a task by itself
+- The footer and the Activity Bar count pomodoros finished today. The dots show only this cycle
+- Finishing a cycle shows one short notice. Start, Pause, and Reset no longer add a toast
+- If you dismiss the auto-pause Resume prompt, the next time the window focuses asks again
+- The status bar no longer blinks. The highlighted background is only while focus is running
+- The Activity Bar lists Open, today, and streak. It no longer repeats the clock
+- Removed the default `Ctrl+Shift+T` / `Cmd+Shift+T` shortcut so it no longer overrides Reopen Closed Editor
+
+### Fixed
+
+- Stop and Reset confirmations describe what they actually do. Reset is available whenever this cycle has pomodoros, including while idle
+- Reopening the timer panel no longer flashes a fake 25:00 before the real state arrives
+- In a short panel, the timer scrolls and the arc shrinks so Start and the task stay reachable
+
 ## [0.1.4] - 2026-09-28
 
 ### Added

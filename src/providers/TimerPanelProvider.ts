@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { calcStreak } from '../core/utils/streak.js';
+import { todayWorkSessions } from '../core/utils/time.js';
 import {
   playHostCompletionSound,
   resolveCompletionSoundRoute,
@@ -169,7 +170,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
     try {
       const state = this.timer.getState();
       const sessions = this.timer.getSessions();
-      this.post({ command: 'stateUpdate', ...state, streak: calcStreak(sessions) });
+      const todayCount = todayWorkSessions(sessions).length;
+      this.post({ command: 'stateUpdate', ...state, streak: calcStreak(sessions), todayCount });
     } catch {
       // Webview disposed — ignore
     }
@@ -247,7 +249,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
 
   private async confirmStop() {
     const action = await vscode.window.showWarningMessage(
-      'Cut a While: Stop the current session? Progress on this cycle will be discarded.',
+      'Cut a While: Stop this session? This stretch is discarded. Start begins a full focus again. Pomodoros in this cycle stay.',
       { modal: true },
       'Stop',
     );
@@ -266,7 +268,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       state.completedSessions > 0;
     if (needsConfirm) {
       const action = await vscode.window.showWarningMessage(
-        'Cut a While: Reset timer and clear session progress for this cycle?',
+        'Cut a While: Reset the cycle counter to zero? Stats history is kept.',
         { modal: true },
         'Reset',
       );

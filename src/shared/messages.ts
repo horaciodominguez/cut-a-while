@@ -33,6 +33,7 @@ export type HostToWebviewMessage =
       completedSessions: number;
       currentTask: string;
       streak: number;
+      todayCount: number;
     }
   | {
       command: 'settingsUpdate';

@@ -167,6 +167,7 @@ describe('TimerManager', () => {
     expect(state.status).toBe('break')
     expect(state.cycleType).toBe('break')
     expect(state.completedSessions).toBe(1)
+    expect(state.currentTask).toBe('late session')
     expect(storage.pushToArray).toHaveBeenCalledWith(
       'sessions',
       expect.objectContaining({ type: 'work', task: 'late session' }),
@@ -255,13 +256,15 @@ describe('TimerManager', () => {
     expect(timer.getState().timeLeft).toBe(25 * 60 - 3)
   })
 
-  it('catches up from wall-clock when a tick fires late', () => {
+  it('drops every elapsed second when a tick arrives late', () => {
     timer.start()
     const before = timer.getState().timeLeft
-    vi.setSystemTime(Date.now() + 2500)
-    vi.runOnlyPendingTimers()
-    // Old decrement-only timer would drop 1s; wall-clock drops ~2–3s+
-    expect(timer.getState().timeLeft).toBeLessThanOrEqual(before - 2)
+    const startedAt = Date.now()
+    vi.setSystemTime(startedAt + 10_000)
+    vi.advanceTimersToNextTimer()
+    const elapsed = Math.floor((Date.now() - startedAt) / 1000)
+    expect(elapsed).toBe(11)
+    expect(timer.getState().timeLeft).toBe(before - 11)
   })
 
   it('transitions to break when work completes', async () => {
@@ -272,6 +275,7 @@ describe('TimerManager', () => {
     expect(state.cycleType).toBe('break')
     expect(state.timeLeft).toBe(5 * 60)
     expect(state.completedSessions).toBe(1)
+    expect(state.currentTask).toBe('test task')
   })
 
   it('saves session on work completion', async () => {
@@ -319,14 +323,15 @@ describe('TimerManager', () => {
     timer2.dispose()
   })
 
-  it('skipBreak transitions from break to running work', async () => {
-    timer.start()
+  it('skipBreak transitions from break to running work and keeps the task', async () => {
+    timer.start('deep work')
     await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
     timer.skipBreak()
     const state = timer.getState()
     expect(state.status).toBe('running')
     expect(state.cycleType).toBe('work')
     expect(state.timeLeft).toBe(25 * 60)
+    expect(state.currentTask).toBe('deep work')
   })
 
   it('setTask updates current task', () => {
@@ -441,6 +446,138 @@ describe('TimerManager', () => {
     expect(timer.getState().timeLeft).toBe(25 * 60)
   })
 
+  it('keeps the task through the break and the auto-started focus', async () => {
+    timer.start('deep work')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    expect(timer.getState()).toMatchObject({
+      status: 'break',
+      cycleType: 'break',
+      timeLeft: 5 * 60,
+      completedSessions: 1,
+      currentTask: 'deep work',
+    })
+
+    await vi.advanceTimersByTimeAsync(5 * 60 * 1000)
+    expect(timer.getState()).toMatchObject({
+      status: 'running',
+      cycleType: 'work',
+      timeLeft: 25 * 60,
+      totalTime: 25 * 60,
+      completedSessions: 1,
+      currentTask: 'deep work',
+    })
+  })
+
+  it('stop keeps the cycle count and the task, and the next start is a full focus', async () => {
+    timer.start('named')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    timer.stop()
+    expect(timer.getState()).toMatchObject({
+      status: 'stopped',
+      cycleType: 'break',
+      timeLeft: 5 * 60,
+      completedSessions: 1,
+      currentTask: 'named',
+    })
+
+    timer.start()
+    expect(timer.getState()).toMatchObject({
+      status: 'running',
+      cycleType: 'work',
+      timeLeft: 25 * 60,
+      totalTime: 25 * 60,
+      completedSessions: 1,
+      currentTask: 'named',
+    })
+  })
+
+  it('reset clears the cycle counter and keeps saved sessions', async () => {
+    timer.start('kept in stats')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    const sessions = timer.getSessions()
+    expect(sessions).toEqual([
+      expect.objectContaining({ type: 'work', duration: 25 * 60, task: 'kept in stats' }),
+    ])
+
+    timer.reset()
+    expect(timer.getState()).toMatchObject({
+      status: 'idle',
+      timeLeft: 25 * 60,
+      completedSessions: 0,
+      currentTask: '',
+    })
+    expect(timer.getSessions()).toEqual(sessions)
+  })
+
+  it('skipBreak does nothing unless a break is running', () => {
+    timer.start('stay')
+    const before = timer.getState()
+    timer.skipBreak()
+    expect(timer.getState()).toEqual(before)
+  })
+
+  it('pause during a break keeps the remaining time and the task', async () => {
+    timer.start('reading')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    vi.advanceTimersByTime(2000)
+    const left = timer.getState().timeLeft
+    expect(left).toBe(5 * 60 - 2)
+
+    timer.pause()
+    vi.advanceTimersByTime(10_000)
+    expect(timer.getState()).toMatchObject({
+      status: 'paused',
+      cycleType: 'break',
+      timeLeft: left,
+      currentTask: 'reading',
+    })
+
+    timer.resume()
+    expect(timer.getState().status).toBe('break')
+    expect(timer.getState().timeLeft).toBe(left)
+  })
+
+  it('reaches a long break only on the fourth focus and keeps the task', async () => {
+    configStore.workDuration = 1 / 60
+    configStore.breakDuration = 1 / 60
+    configStore.longBreakDuration = 2 / 60
+    configStore.longBreakInterval = 4
+    configStore.autoStart = true
+    const cycle = new TimerManager(storage as unknown as Memento)
+    cycle.start('cycle')
+
+    for (let i = 0; i < 3; i++) {
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(cycle.getState()).toMatchObject({
+        status: 'break',
+        timeLeft: 1,
+        completedSessions: i + 1,
+        currentTask: 'cycle',
+      })
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(cycle.getState()).toMatchObject({
+        status: 'running',
+        cycleType: 'work',
+        timeLeft: 1,
+        currentTask: 'cycle',
+      })
+    }
+
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(cycle.getState()).toMatchObject({
+      status: 'break',
+      cycleType: 'break',
+      timeLeft: 2,
+      totalTime: 2,
+      completedSessions: 4,
+      currentTask: 'cycle',
+    })
+    expect(cycle.getSessions().map((session) => session.type)).toEqual([
+      'work', 'break', 'work', 'break', 'work', 'break', 'work',
+    ])
+    cycle.dispose()
+  })
+
   it('handles start from stopped state', () => {
     timer.start()
     vi.advanceTimersByTime(5000)
@@ -461,8 +598,8 @@ describe('TimerManager', () => {
       const todo = await timer.addTodo('Refactor auth')
       expect(todo.text).toBe('Refactor auth')
       expect(todo.done).toBe(false)
-      expect(todo.id).toBeTruthy()
-      expect(todo.createdAt).toBeGreaterThan(0)
+      expect(todo.id.startsWith(`${Date.now()}-`)).toBe(true)
+      expect(todo.createdAt).toBe(Date.now())
       expect(todo.completedAt).toBeUndefined()
     })
 
@@ -490,7 +627,7 @@ describe('TimerManager', () => {
       const toggled = todos.find((t) => t.id === todo.id)
       expect(toggled).toBeDefined()
       expect(toggled!.done).toBe(true)
-      expect(toggled!.completedAt).toBeGreaterThan(0)
+      expect(toggled!.completedAt).toBe(Date.now())
     })
 
     it('toggleTodo marks a done todo as pending and clears completedAt', async () => {

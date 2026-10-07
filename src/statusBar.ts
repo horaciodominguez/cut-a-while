@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { isLongBreakPhase, sessionsUntilLongBreak } from './core/utils/time.js';
 import { TimerManager, type TimerState } from './timer/timerManager.js';
 
 const STATE_ICONS: Record<string, string> = {
@@ -17,7 +18,6 @@ const STATE_COLORS: Record<string, string> = {
   stopped: '#ef5350',
 };
 
-const GLOW_INTERVAL_MS = 2500;
 const PRIORITY = 100;
 
 export class StatusBarManager implements vscode.Disposable {
@@ -26,8 +26,6 @@ export class StatusBarManager implements vscode.Disposable {
   private stateDisposable: vscode.Disposable;
   private configDisposable: vscode.Disposable;
   private currentAlignment: string = 'right';
-  private glowInterval: ReturnType<typeof setInterval> | null = null;
-  private glowPhase = false;
 
   constructor(timer: TimerManager) {
     this.timer = timer;
@@ -77,49 +75,24 @@ export class StatusBarManager implements vscode.Disposable {
 
     this.item.text = `${icon} ${timeFormatted}`;
     this.item.color = color || undefined;
-    this.item.backgroundColor = color
+    this.item.backgroundColor = state.status === 'running'
       ? new vscode.ThemeColor('statusBarItem.prominentBackground')
       : undefined;
 
     const sessions = state.completedSessions;
-    const cycleLabel = state.cycleType === 'work' ? 'Focus' : 'Break';
-    const longBreakInterval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
-    const nextLongBreak = sessions > 0 && sessions % longBreakInterval === 0
-      ? 'Long break now!'
-      : `${longBreakInterval - (sessions % longBreakInterval)} sessions until long break`;
+    const interval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
+    const longBreak = isLongBreakPhase(sessions, interval, state.cycleType);
+    const cycleLabel = longBreak ? 'Long break' : state.cycleType === 'work' ? 'Focus' : 'Break';
+    const untilLongBreak = longBreak
+      ? 'Long break'
+      : `${sessionsUntilLongBreak(sessions, interval)} until long break`;
 
     this.item.tooltip =
       `Cut a While — ${cycleLabel}\n` +
       `${timeFormatted} remaining\n` +
-      `Completed: ${sessions} pomodoro${sessions !== 1 ? 's' : ''}\n` +
-      `${nextLongBreak}\n` +
+      `This cycle: ${sessions}\n` +
+      `${untilLongBreak}\n` +
       `---\nClick to open panel`;
-
-    if (state.status === 'running') {
-      this.startGlow();
-    } else {
-      this.stopGlow();
-    }
-  }
-
-  private startGlow() {
-    if (this.glowInterval) return;
-    this.glowPhase = false;
-
-    this.glowInterval = setInterval(() => {
-      this.glowPhase = !this.glowPhase;
-      this.item.backgroundColor = this.glowPhase
-        ? new vscode.ThemeColor('statusBarItem.prominentBackground')
-        : undefined;
-    }, GLOW_INTERVAL_MS);
-  }
-
-  private stopGlow() {
-    if (this.glowInterval) {
-      clearInterval(this.glowInterval);
-      this.glowInterval = null;
-    }
-    this.item.backgroundColor = undefined;
   }
 
   private formatTime(seconds: number): string {
@@ -129,7 +102,6 @@ export class StatusBarManager implements vscode.Disposable {
   }
 
   dispose() {
-    this.stopGlow();
     this.stateDisposable.dispose();
     this.configDisposable.dispose();
     this.item.dispose();

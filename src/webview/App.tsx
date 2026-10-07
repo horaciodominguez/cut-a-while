@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
-import { formatSecondsToTime } from '../core/utils/time.ts'
+import { formatSecondsToTime, isLongBreakPhase } from '../core/utils/time.ts'
 import type { WebviewToHostMessage } from '../shared/messages.ts'
 import { TimerArc } from './components/TimerArc.tsx'
 import { SessionDots } from './components/SessionDots.tsx'
@@ -10,7 +10,7 @@ import { StatsPanel } from './components/StatsPanel.tsx'
 import { TodoPanel } from './components/TodoPanel.tsx'
 import { StreakIndicator } from './components/StreakIndicator.tsx'
 import { applyAccent, accentColor } from './theme.ts'
-import { postMessage, setVsCodeState } from './vscodeApi.ts'
+import { getVsCodeState, postMessage, setVsCodeState } from './vscodeApi.ts'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
 
@@ -39,12 +39,39 @@ const STATUS_LABELS: Record<TimerStatus, string> = {
   break: 'Break',
 }
 
+const TIMER_STATUSES: TimerStatus[] = ['idle', 'running', 'paused', 'stopped', 'break']
+
+function readCachedState(): TimerState | null {
+  const raw = getVsCodeState()
+  if (!raw || typeof raw !== 'object') return null
+  const saved = raw as Partial<TimerState>
+  if (typeof saved.timeLeft !== 'number' || typeof saved.status !== 'string') return null
+  if (!TIMER_STATUSES.includes(saved.status as TimerStatus)) return null
+  return {
+    status: saved.status as TimerStatus,
+    timeLeft: saved.timeLeft,
+    totalTime: typeof saved.totalTime === 'number' ? saved.totalTime : saved.timeLeft,
+    cycleType: saved.cycleType === 'break' ? 'break' : 'work',
+    completedSessions: typeof saved.completedSessions === 'number' ? saved.completedSessions : 0,
+    currentTask: typeof saved.currentTask === 'string' ? saved.currentTask : '',
+  }
+}
+
+function phaseLabel(state: TimerState, interval: number): string {
+  const onBreak = state.cycleType === 'break' && (state.status === 'break' || state.status === 'paused')
+  if (onBreak) {
+    return isLongBreakPhase(state.completedSessions, interval, 'break') ? 'Long break' : 'Break'
+  }
+  return STATUS_LABELS[state.status]
+}
+
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 function App() {
-  const [state, setState] = useState<TimerState>({
+  const cached = readCachedState()
+  const [state, setState] = useState<TimerState>(cached ?? {
     status: 'idle',
     timeLeft: 25 * 60,
     totalTime: 25 * 60,
@@ -52,6 +79,8 @@ function App() {
     completedSessions: 0,
     currentTask: '',
   })
+  const [hasState, setHasState] = useState(cached !== null)
+  const [todayCount, setTodayCount] = useState(0)
   const [task, setTask] = useState('')
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [statsOpen, setStatsOpen] = useState(false)
@@ -85,10 +114,20 @@ function App() {
     const handler = (event: MessageEvent) => {
       const msg = event.data
       if (msg.command === 'stateUpdate') {
-        const timerState: TimerState = msg
+        const status = TIMER_STATUSES.includes(msg.status) ? msg.status : 'idle'
+        const timerState: TimerState = {
+          status,
+          timeLeft: msg.timeLeft,
+          totalTime: msg.totalTime,
+          cycleType: msg.cycleType === 'break' ? 'break' : 'work',
+          completedSessions: msg.completedSessions,
+          currentTask: msg.currentTask ?? '',
+        }
         setState(timerState)
+        setHasState(true)
         setVsCodeState(timerState)
         if (typeof msg.streak === 'number') setStreak(msg.streak)
+        if (typeof msg.todayCount === 'number') setTodayCount(msg.todayCount)
       }
       if (msg.command === 'settingsUpdate') {
         setSoundEnabled(msg.settings.soundEnabled)
@@ -148,17 +187,8 @@ function App() {
   }, [])
 
   const handleStart = (taskText?: string) => {
-    if (state.status === 'break') {
-      send({ command: 'skipBreak' })
-      setTask('')
-      return
-    }
     const t = (taskText ?? task).trim()
-    if (t) {
-      const exists = todos.some((td) => td.text === t && !td.done)
-      if (!exists) postMessage({ command: 'addTodo', text: t })
-      send({ command: 'setTask', task: t })
-    }
+    if (t) send({ command: 'setTask', task: t })
     send(t ? { command: 'start', task: t } : { command: 'start' })
   }
 
@@ -176,7 +206,7 @@ function App() {
   }
 
   const confirmStop = () => {
-    if (state.status === 'running' || state.status === 'paused') {
+    if (state.status === 'running' || state.status === 'paused' || state.status === 'break') {
       send({ command: 'confirmStop' })
       return
     }
@@ -187,9 +217,13 @@ function App() {
     send({ command: 'confirmReset' })
   }
 
+  if (!hasState) {
+    return <div className="timer-shell" aria-busy="true" />
+  }
+
   const pendingTodos = todos.filter((t) => !t.done)
   const isBreak = state.cycleType === 'break'
-  const isActive = state.status === 'running' || state.status === 'break'
+  const isActive = state.status === 'running' || state.status === 'break' || (state.status === 'paused' && isBreak)
   const timeStr = formatSecondsToTime(state.timeLeft)
   const accentHex = accentColor(accent)
   const phaseColor = isBreak ? 'var(--break)' : accentHex
@@ -239,14 +273,19 @@ function App() {
               style={{ '--phase-color': phaseColor } as CSSProperties}
               aria-live="polite"
             >
-              {STATUS_LABELS[state.status]}
+              {phaseLabel(state, longBreakInterval)}
             </span>
           </div>
         </div>
       </section>
 
       <div className="timer-meta">
-        <SessionDots completed={state.completedSessions} total={longBreakInterval} accent={dotsColor} />
+        <SessionDots
+          completed={state.completedSessions}
+          total={longBreakInterval}
+          cycleType={state.cycleType}
+          accent={dotsColor}
+        />
         <StreakIndicator streak={streak} />
 
         {(state.status === 'idle' || state.status === 'stopped') && pendingTodos.length > 0 && (
@@ -263,6 +302,10 @@ function App() {
               </button>
             ))}
           </div>
+        )}
+
+        {state.status === 'break' && state.currentTask && (
+          <p className="task-label">{state.currentTask}</p>
         )}
 
         {state.status !== 'break' && (
@@ -288,9 +331,16 @@ function App() {
 
         <div className="timer-actions">
           {(state.status === 'idle' || state.status === 'stopped') && (
-            <button className="btn-primary" onClick={() => handleStart()}>
-              <IconPlay /> Start
-            </button>
+            <>
+              <button className="btn-primary" onClick={() => handleStart()}>
+                <IconPlay /> Start
+              </button>
+              {state.completedSessions > 0 && (
+                <button className="btn-ghost" onClick={confirmReset}>
+                  <IconReset /> Reset
+                </button>
+              )}
+            </>
           )}
           {state.status === 'running' && (
             <>
@@ -313,21 +363,24 @@ function App() {
             </>
           )}
           {state.status === 'break' && (
-            <button className="btn-primary" onClick={() => handleStart()} style={{ background: 'var(--break)' }}>
-              <IconSkip /> Skip break
-            </button>
-          )}
-          {state.status === 'stopped' && (
-            <button className="btn-ghost" onClick={confirmReset}>
-              <IconReset /> Reset
-            </button>
+            <>
+              <button className="btn-primary" onClick={() => send({ command: 'pause' })}>
+                <IconPause /> Pause
+              </button>
+              <button className="btn-ghost" onClick={confirmStop}>
+                <IconStop /> Stop
+              </button>
+              <button className="btn-ghost" onClick={() => send({ command: 'skipBreak' })}>
+                <IconSkip /> Start next focus
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {state.completedSessions > 0 && (
+      {todayCount > 0 && (
         <footer className="timer-footer">
-          {state.completedSessions} pomodoro{state.completedSessions !== 1 ? 's' : ''} today
+          {todayCount} pomodoro{todayCount !== 1 ? 's' : ''} today
         </footer>
       )}
     </div>

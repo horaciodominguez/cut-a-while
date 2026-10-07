@@ -2,7 +2,7 @@
   "name": "cut-a-while",
   "displayName": "Cut a While",
   "description": "Pomodoro timer for VS Code — stay focused, track your flow",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "horaciodominguez",
   "license": "MIT",
   "icon": "media/icon.png",
@@ -89,28 +89,6 @@
         "title": "Cut a While: Show Statistics"
       }
     ],
-    "keybindings": [
-      {
-        "command": "cut-a-while.toggle",
-        "key": "ctrl+shift+t",
-        "mac": "cmd+shift+t",
-        "when": "!textInputFocus"
-      }
-    ],
-    "menus": {
-      "view/title": [
-        {
-          "command": "cut-a-while.showPanel",
-          "when": "view == cut-a-while.timerTree",
-          "group": "navigation"
-        },
-        {
-          "command": "cut-a-while.toggle",
-          "when": "view == cut-a-while.timerTree",
-          "group": "navigation@1"
-        }
-      ]
-    },
     "configuration": {
       "title": "Cut a While",
       "properties": {

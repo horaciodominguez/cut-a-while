@@ -1,16 +1,21 @@
+import { filledSessionDots } from '../../core/utils/time.ts'
+
 export function SessionDots({
   completed,
   total = 4,
+  cycleType,
   accent,
 }: {
   completed: number
   total?: number
+  cycleType: 'work' | 'break'
   accent: string
 }) {
-  const doneInCycle = completed % total === 0 && completed > 0 ? total : completed % total
+  const doneInCycle = filledSessionDots(completed, total, cycleType)
+  const label = `${doneInCycle} of ${total} sessions in this cycle`
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2.5" role="img" aria-label={label}>
       <div className="flex gap-[5px]">
         {Array.from({ length: total }, (_, i) => (
           <span
@@ -25,9 +30,6 @@ export function SessionDots({
           />
         ))}
       </div>
-      <span className="text-[10px] tabular-nums font-medium" style={{ color: 'var(--text-tertiary)' }}>
-        {doneInCycle}/{total}
-      </span>
     </div>
   )
 }

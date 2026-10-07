@@ -119,14 +119,12 @@ export class TimerManager implements vscode.Disposable {
       state.totalTime = state.timeLeft;
       state.status = 'break';
       state.cycleType = 'break';
-      state.currentTask = '';
       return;
     }
 
     state.timeLeft = config.workDuration;
     state.totalTime = config.workDuration;
     state.cycleType = 'work';
-    state.currentTask = '';
     state.status = 'idle';
     if (config.autoStart) {
       state.status = 'running';
@@ -264,7 +262,6 @@ export class TimerManager implements vscode.Disposable {
 
   skipBreak() {
     if (this.completing || this.state.status !== 'break') return;
-    this.state.currentTask = '';
     const config = this.getConfig();
     this.state.timeLeft = config.workDuration;
     this.state.totalTime = config.workDuration;
@@ -340,7 +337,6 @@ export class TimerManager implements vscode.Disposable {
         this.state.totalTime = this.state.timeLeft;
         this.state.status = 'break';
         this.state.cycleType = 'break';
-        this.state.currentTask = '';
         this.startTick();
         this._onDidCompleteCycle.fire('work');
         this.emit();
@@ -350,7 +346,6 @@ export class TimerManager implements vscode.Disposable {
       this.state.timeLeft = config.workDuration;
       this.state.totalTime = config.workDuration;
       this.state.cycleType = 'work';
-      this.state.currentTask = '';
       this.state.status = 'idle';
       this._onDidCompleteCycle.fire('break');
       this.emit();

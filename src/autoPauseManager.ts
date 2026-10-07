@@ -4,6 +4,7 @@ import { Notifications } from './notifications.js';
 
 export class AutoPauseManager implements vscode.Disposable {
   private wasRunning = false;
+  private awaitingResume = false;
   private disposable: vscode.Disposable;
 
   constructor(timer: TimerManager) {
@@ -19,15 +20,23 @@ export class AutoPauseManager implements vscode.Disposable {
           this.wasRunning = true;
           timer.pause();
         }
-      } else if (this.wasRunning) {
-        this.wasRunning = false;
+      } else if (this.wasRunning && !this.awaitingResume) {
         const ts = timer.getState();
+        if (ts.status !== 'paused') {
+          this.wasRunning = false;
+          return;
+        }
+        this.awaitingResume = true;
         const label = ts.cycleType === 'break' ? 'Break' : 'Focus time';
         Notifications.confirm(
           `${label} paused while you were away. Resume?`,
           'Resume',
         ).then((action) => {
-          if (action) timer.resume();
+          this.awaitingResume = false;
+          if (action) {
+            this.wasRunning = false;
+            timer.resume();
+          }
         });
       }
     });

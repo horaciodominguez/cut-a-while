@@ -42,7 +42,7 @@ Search **Cut a While** in Extensions, install by ID `horaciodominguez.cut-a-whil
 
 ### GitHub Release (`.vsix`)
 
-Download `cut-a-while-0.1.4.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
+Download `cut-a-while-0.1.5.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
 
 ### From source
 
@@ -52,20 +52,20 @@ npm run build
 npm run package
 ```
 
-Then install the generated `cut-a-while-0.1.4.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
+Then install the generated `cut-a-while-0.1.5.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
 
 ## Usage
 
-1. Open **Cut a While** in the Activity Bar and choose **Open Timer Panel** (or the title-bar icon). The sidebar is an overview; the timer UI is the bottom **Timer Panel**. You can also click the status-bar countdown.
-2. Pick a task chip or type what you’re working on. A chip only selects the task.
-3. Press **Start**, or use the shortcut below. You can edit the task while the session is running.
-4. When the cycle ends, take your break — or skip it from the panel.
+1. Open **Cut a While** in the Activity Bar and choose **Open Timer Panel**. The sidebar shows today’s count and your streak; the timer UI is the bottom **Timer Panel**. You can also click the status-bar countdown.
+2. Pick a task chip or type what you’re working on. A chip only selects the task. Starting a session does not add a task to the list.
+3. Press **Start**. You can edit the task while the session is running. The same task stays through the break.
+4. When focus ends, the break starts and a short notice appears. From the panel you can pause, stop, or start the next focus.
 
 ### Commands
 
 | Command | Default shortcut |
 |---------|------------------|
-| **Cut a While: Start / Pause Timer** | `Ctrl+Shift+T` / `Cmd+Shift+T` (when not typing in an editor) |
+| **Cut a While: Start / Pause Timer** | None. Assign one in Keyboard Shortcuts. `Ctrl+Shift+T` / `Cmd+Shift+T` stays **Reopen Closed Editor**. On a break this pauses; it does not skip the break. |
 | **Cut a While: Show Timer Panel** | — |
 | **Cut a While: Reset Timer** | — |
 | **Cut a While: Show Statistics** | — |
