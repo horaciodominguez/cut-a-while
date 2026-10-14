@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.6] - 2026-10-13
+
+### Changed
+
+- Changing Work while idle or stopped updates the clock. Duration sliders save when you release them, and apply to the next session
+- **Show Statistics** opens the stats drawer even if the panel was just created
+- Stats “Week” matches the last-7-days chart. Today shows its minutes, and the total is labeled all-time
+- Auto-start, Auto-pause, the long-break interval, and Zen mode have a one-line hint. The whole toggle row is clickable
+- Sound preview plays the focus-end sound. Task chips show the most recent tasks
+- Header icons close the open drawer. Button text stays readable on light accents, and the green accent is no longer the break color
+
+### Fixed
+
+- The stats and tasks drawers no longer flash an empty state before data arrives
+- Add stays disabled when the task text is empty, and delete stays visible
+
 ## [0.1.5] - 2026-10-06
 
 ### Changed
