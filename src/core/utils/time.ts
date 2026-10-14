@@ -1,5 +1,14 @@
 const MAX_DISPLAY_SECONDS = 99 * 60 + 59; // 5999
 
+/** True when `ts` falls on one of the last `days` calendar days, including today. */
+export function isWithinLastDays(ts: number, days: number, now = Date.now()): boolean {
+  if (days <= 0) return false;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - (days - 1));
+  return ts >= start.getTime();
+}
+
 export function isSameCalendarDay(ts: number, now = Date.now()): boolean {
   const d = new Date(ts);
   const n = new Date(now);

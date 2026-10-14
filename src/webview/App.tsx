@@ -8,8 +8,7 @@ import { playCycleSound, unlockAudio } from './hooks/useSound.ts'
 import { SettingsPanel } from './components/SettingsPanel.tsx'
 import { StatsPanel } from './components/StatsPanel.tsx'
 import { TodoPanel } from './components/TodoPanel.tsx'
-import { StreakIndicator } from './components/StreakIndicator.tsx'
-import { applyAccent, accentColor } from './theme.ts'
+import { applyAccent, accentColor, BREAK_ACCENT } from './theme.ts'
 import { getVsCodeState, postMessage, setVsCodeState } from './vscodeApi.ts'
 
 type TimerStatus = 'idle' | 'running' | 'paused' | 'stopped' | 'break'
@@ -65,10 +64,6 @@ function phaseLabel(state: TimerState, interval: number): string {
   return STATUS_LABELS[state.status]
 }
 
-function prefersReducedMotion(): boolean {
-  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
-
 function App() {
   const cached = readCachedState()
   const [state, setState] = useState<TimerState>(cached ?? {
@@ -87,15 +82,10 @@ function App() {
   const [todoOpen, setTodoOpen] = useState(false)
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [accent, setAccent] = useState('blue')
-  const [pulse, setPulse] = useState(false)
-  const prevCompletedRef = useRef(state.completedSessions)
-  const prevCycleRef = useRef(state.cycleType)
-  const firstStateRef = useRef(true)
   const taskInputRef = useRef<HTMLInputElement>(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [soundTheme, setSoundTheme] = useState('bell')
   const [longBreakInterval, setLongBreakInterval] = useState(4)
-  const [streak, setStreak] = useState(0)
   const soundEnabledRef = useRef(soundEnabled)
   const soundThemeRef = useRef(soundTheme)
   soundEnabledRef.current = soundEnabled
@@ -126,7 +116,6 @@ function App() {
         setState(timerState)
         setHasState(true)
         setVsCodeState(timerState)
-        if (typeof msg.streak === 'number') setStreak(msg.streak)
         if (typeof msg.todayCount === 'number') setTodayCount(msg.todayCount)
       }
       if (msg.command === 'settingsUpdate') {
@@ -160,24 +149,6 @@ function App() {
   }, [handleAccentChange])
 
   useEffect(() => {
-    if (firstStateRef.current) {
-      firstStateRef.current = false
-      prevCompletedRef.current = state.completedSessions
-      prevCycleRef.current = state.cycleType
-      return
-    }
-    if (state.completedSessions > prevCompletedRef.current && !prefersReducedMotion()) {
-      setPulse(true)
-      const t = setTimeout(() => setPulse(false), 280)
-      prevCompletedRef.current = state.completedSessions
-      prevCycleRef.current = state.cycleType
-      return () => clearTimeout(t)
-    }
-    prevCompletedRef.current = state.completedSessions
-    prevCycleRef.current = state.cycleType
-  }, [state.completedSessions, state.cycleType])
-
-  useEffect(() => {
     if (document.activeElement === taskInputRef.current) return
     setTask(state.currentTask)
   }, [state.currentTask])
@@ -200,9 +171,13 @@ function App() {
   }
 
   const openPanel = (panel: 'settings' | 'stats' | 'todo') => {
-    setSettingsOpen(panel === 'settings')
-    setStatsOpen(panel === 'stats')
-    setTodoOpen(panel === 'todo')
+    const alreadyOpen =
+      (panel === 'settings' && settingsOpen) ||
+      (panel === 'stats' && statsOpen) ||
+      (panel === 'todo' && todoOpen)
+    setSettingsOpen(panel === 'settings' && !alreadyOpen)
+    setStatsOpen(panel === 'stats' && !alreadyOpen)
+    setTodoOpen(panel === 'todo' && !alreadyOpen)
   }
 
   const confirmStop = () => {
@@ -227,13 +202,13 @@ function App() {
   const timeStr = formatSecondsToTime(state.timeLeft)
   const accentHex = accentColor(accent)
   const phaseColor = isBreak ? 'var(--break)' : accentHex
-  const arcStroke = isBreak ? '#34d399' : accentHex
+  const arcStroke = isBreak ? BREAK_ACCENT : accentHex
+  const recentTodos = [...pendingTodos].sort((a, b) => b.createdAt - a.createdAt).slice(0, 5)
   const dotsColor = arcStroke
 
   return (
-    <div className={`timer-shell ${isBreak ? 'is-break' : 'is-work'}`}>
+    <div className="timer-shell">
       <header className="timer-header">
-        <span className="wordmark">Cut a While</span>
         <nav className="header-actions" aria-label="Panel navigation">
           <button className="icon-btn" onClick={() => openPanel('settings')} aria-label="Settings" aria-pressed={settingsOpen}>
             <IconSettings />
@@ -258,11 +233,10 @@ function App() {
             totalTime={state.totalTime}
             stroke={arcStroke}
             status={state.status}
-            pulse={pulse}
           />
           <div className="timer-display">
             <time
-              className={`timer-time ${pulse ? 'is-pulse' : ''}`}
+              className="timer-time"
               dateTime={`PT${state.timeLeft}S`}
               style={{ '--phase-color': phaseColor } as CSSProperties}
             >
@@ -286,15 +260,14 @@ function App() {
           cycleType={state.cycleType}
           accent={dotsColor}
         />
-        <StreakIndicator streak={streak} />
-
-        {(state.status === 'idle' || state.status === 'stopped') && pendingTodos.length > 0 && (
+        {(state.status === 'idle' || state.status === 'stopped') && recentTodos.length > 0 && (
           <div className="task-chips">
-            {pendingTodos.slice(0, 5).map((td) => (
+            {recentTodos.map((td) => (
               <button
                 key={td.id}
                 type="button"
                 className={`task-chip${task === td.text ? ' is-selected' : ''}`}
+                title={td.text}
                 aria-pressed={task === td.text}
                 onClick={() => setTask(td.text)}
               >

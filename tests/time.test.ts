@@ -5,9 +5,11 @@ import {
   formatSecondsToTime,
   isLongBreakPhase,
   isSameCalendarDay,
+  isWithinLastDays,
   sessionsUntilLongBreak,
   todayWorkSessions,
 } from '../src/core/utils/time.js'
+import { ACCENT_COLORS, BREAK_ACCENT, accentForeground } from '../src/webview/theme.ts'
 
 describe('formatSecondsToTime', () => {
   it('formats zero', () => {
@@ -109,6 +111,25 @@ describe('cycle progress', () => {
     [4, 0, 'break', false],
   ] as const)('long break %i/%i during %s is %s', (completed, interval, cycle, expected) => {
     expect(isLongBreakPhase(completed, interval, cycle)).toBe(expected)
+  })
+
+  it('counts the same rolling 7 days the chart uses', () => {
+    const now = new Date(2026, 9, 13, 15, 0, 0).getTime()
+    const startOfWindow = new Date(2026, 9, 7, 0, 1, 0).getTime()
+    const beforeWindow = new Date(2026, 9, 6, 23, 0, 0).getTime()
+    expect(isWithinLastDays(now, 7, now)).toBe(true)
+    expect(isWithinLastDays(startOfWindow, 7, now)).toBe(true)
+    expect(isWithinLastDays(beforeWindow, 7, now)).toBe(false)
+    expect(isWithinLastDays(now, 0, now)).toBe(false)
+  })
+
+  it('keeps the green accent distinct from the break color and readable', () => {
+    expect(ACCENT_COLORS.green).not.toBe(BREAK_ACCENT)
+    expect(accentForeground(BREAK_ACCENT)).toBe('#1a1a1a')
+    expect(accentForeground('#2dd4bf')).toBe('#1a1a1a')
+    expect(accentForeground('#fb923c')).toBe('#1a1a1a')
+    expect(accentForeground(ACCENT_COLORS.blue)).toBe('#ffffff')
+    expect(accentForeground(ACCENT_COLORS.green)).toBe('#ffffff')
   })
 
   it('counts only work sessions from the same calendar day', () => {

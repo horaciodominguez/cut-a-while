@@ -578,6 +578,40 @@ describe('TimerManager', () => {
     cycle.dispose()
   })
 
+  it('syncIdleDuration shows the next focus length while idle or stopped', () => {
+    configStore.workDuration = 50
+    timer.syncIdleDuration()
+    expect(timer.getState()).toMatchObject({
+      status: 'idle',
+      cycleType: 'work',
+      timeLeft: 50 * 60,
+      totalTime: 50 * 60,
+    })
+  })
+
+  it('syncIdleDuration does not move a running countdown', () => {
+    timer.start()
+    vi.advanceTimersByTime(4000)
+    const left = timer.getState().timeLeft
+    configStore.workDuration = 50
+    timer.syncIdleDuration()
+    expect(timer.getState()).toMatchObject({ status: 'running', timeLeft: left, totalTime: 25 * 60 })
+  })
+
+  it('syncIdleDuration replaces a stopped countdown with the next focus length', () => {
+    timer.start()
+    vi.advanceTimersByTime(8000)
+    timer.stop()
+    configStore.workDuration = 10
+    timer.syncIdleDuration()
+    expect(timer.getState()).toMatchObject({
+      status: 'stopped',
+      cycleType: 'work',
+      timeLeft: 10 * 60,
+      totalTime: 10 * 60,
+    })
+  })
+
   it('handles start from stopped state', () => {
     timer.start()
     vi.advanceTimersByTime(5000)

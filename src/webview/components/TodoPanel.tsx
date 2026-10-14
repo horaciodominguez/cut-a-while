@@ -17,6 +17,7 @@ interface TodoPanelProps {
 
 export function TodoPanel({ open, onClose }: TodoPanelProps) {
   const [todos, setTodos] = useState<TodoItem[]>([])
+  const [todosLoaded, setTodosLoaded] = useState(false)
   const [newText, setNewText] = useState('')
   const [showCompleted, setShowCompleted] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -25,7 +26,10 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
     if (!open) return
     const handler = (event: MessageEvent) => {
       const msg = event.data
-      if (msg.command === 'todosUpdate') setTodos(msg.todos)
+      if (msg.command === 'todosUpdate') {
+        setTodos(msg.todos)
+        setTodosLoaded(true)
+      }
     }
     window.addEventListener('message', handler)
     postMessage({ command: 'getTodos' })
@@ -67,13 +71,13 @@ export function TodoPanel({ open, onClose }: TodoPanelProps) {
           placeholder="Add a task..."
           className="task-input flex-1 text-left text-xs"
         />
-        <button onClick={addTodo} className="btn-primary px-4 py-2.5 text-xs min-w-0">
+        <button onClick={addTodo} className="btn-primary px-4 py-2.5 text-xs min-w-0" disabled={!newText.trim()}>
           Add
         </button>
       </div>
 
       <div className="space-y-1">
-        {pending.length === 0 && (
+        {todosLoaded && pending.length === 0 && (
           <EmptyState
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -149,7 +153,7 @@ function TodoRow({
       </span>
       <button
         onClick={onDelete}
-        className="p-0.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 cursor-pointer icon-btn"
+        className="p-0.5 rounded cursor-pointer icon-btn"
         style={{ width: 22, height: 22 }}
         aria-label="Delete task"
       >

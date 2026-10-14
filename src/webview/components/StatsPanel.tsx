@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { isWithinLastDays } from '../../core/utils/time.ts'
 import { postMessage } from '../vscodeApi.ts'
 import { DrawerPanel } from './DrawerPanel.tsx'
 
@@ -18,15 +19,6 @@ function isToday(ts: number): boolean {
   const d = new Date(ts)
   const n = new Date()
   return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear()
-}
-
-function isThisWeek(ts: number): boolean {
-  const d = new Date(ts)
-  const n = new Date()
-  const weekStart = new Date(n)
-  weekStart.setDate(n.getDate() - n.getDay())
-  weekStart.setHours(0, 0, 0, 0)
-  return d >= weekStart
 }
 
 function dayLabel(date: Date): string {
@@ -53,6 +45,7 @@ function getWeekDays(): Date[] {
 
 export function StatsPanel({ open, onClose }: StatsPanelProps) {
   const [sessions, setSessions] = useState<Session[]>([])
+  const [sessionsLoaded, setSessionsLoaded] = useState(false)
   const [projects, setProjects] = useState<Record<string, number>>({})
 
   useEffect(() => {
@@ -61,6 +54,7 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
       const msg = event.data
       if (msg.command === 'sessionsUpdate') {
         setSessions(msg.sessions)
+        setSessionsLoaded(true)
       }
       if (msg.command === 'projectFocusUpdate') {
         setProjects(msg.projects || {})
@@ -74,7 +68,14 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
 
   const workSessions = useMemo(() => sessions.filter((s) => s.type === 'work'), [sessions])
   const today = useMemo(() => workSessions.filter((s) => isToday(s.timestamp)), [workSessions])
-  const week = useMemo(() => workSessions.filter((s) => isThisWeek(s.timestamp)), [workSessions])
+  const week = useMemo(
+    () => workSessions.filter((s) => isWithinLastDays(s.timestamp, 7)),
+    [workSessions],
+  )
+  const todayMinutes = useMemo(
+    () => today.reduce((sum, s) => sum + Math.round(s.duration / 60), 0),
+    [today],
+  )
 
   const weekDays = useMemo(() => {
     const days = getWeekDays()
@@ -104,11 +105,14 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
       .slice(0, 5)
   }, [workSessions])
 
-  const topTaskMax = Math.max(1, ...topTasks.map(([, c]) => c))
+  const visibleProjects = Object.entries(projects)
+    .map(([name, seconds]) => [name, Math.round(seconds / 60)] as const)
+    .filter(([, minutes]) => minutes > 0)
+    .sort((a, b) => b[1] - a[1])
 
   return (
     <DrawerPanel title="Stats" open={open} onClose={onClose}>
-      {workSessions.length === 0 ? (
+      {!sessionsLoaded ? null : workSessions.length === 0 ? (
         <EmptyState
           icon={
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -122,13 +126,13 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
       ) : (
         <>
           <div className="grid grid-cols-3 gap-2 mb-5">
-            <Card value={today.length} label="Today" />
+            <Card value={today.length} label="Today" detail={`${todayMinutes} min`} />
             <Card value={week.length} label="Week" />
             <Card value={workSessions.length} label="Total" />
           </div>
 
           <p className="text-xs text-center mb-5" style={{ color: 'var(--text-secondary)' }}>
-            {totalMinutes} min of focus
+            {totalMinutes} min all-time
           </p>
 
           <div className="mb-6">
@@ -160,39 +164,25 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
                 {topTasks.map(([taskName, count]) => (
                   <div key={taskName} className="flex items-center gap-2">
                     <span className="text-xs flex-1 truncate" style={{ color: 'var(--text)' }}>{taskName}</span>
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border-subtle)' }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${(count / topTaskMax) * 100}%`,
-                            background: 'var(--accent)',
-                            opacity: 0.7,
-                          }}
-                        />
-                      </div>
-                      <span className="text-[10px] tabular-nums w-6 text-right" style={{ color: 'var(--text-secondary)' }}>{count}</span>
-                    </div>
+                    <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>{count}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {Object.keys(projects).length > 0 && (
+          {visibleProjects.length > 0 && (
             <div>
-              <h3 className="section-label">Projects</h3>
+              <h3 className="section-label">All-time, by folder name</h3>
               <div className="space-y-2">
-                {Object.entries(projects)
-                  .sort((a, b) => b[1] - a[1])
-                  .map(([name, seconds]) => (
-                    <div key={name} className="flex items-center justify-between">
-                      <span className="text-xs truncate" style={{ color: 'var(--text)' }}>{name}</span>
-                      <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
-                        {Math.round(seconds / 60)} min
-                      </span>
-                    </div>
-                  ))}
+                {visibleProjects.map(([name, minutes]) => (
+                  <div key={name} className="flex items-center justify-between gap-3">
+                    <span className="text-xs truncate" style={{ color: 'var(--text)' }}>{name}</span>
+                    <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                      {minutes} min
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -202,7 +192,7 @@ export function StatsPanel({ open, onClose }: StatsPanelProps) {
   )
 }
 
-function Card({ value, label }: { value: number; label: string }) {
+function Card({ value, label, detail }: { value: number; label: string; detail?: string }) {
   return (
     <div
       className="flex flex-col items-center gap-1 py-2.5 px-2 rounded-[var(--radius-sm)]"
@@ -210,6 +200,7 @@ function Card({ value, label }: { value: number; label: string }) {
     >
       <span className="text-lg font-semibold tabular-nums" style={{ color: 'var(--text)' }}>{value}</span>
       <span className="text-[10px]" style={{ color: 'var(--text-secondary)' }}>{label}</span>
+      {detail ? <span className="text-[10px] tabular-nums" style={{ color: 'var(--text-tertiary)' }}>{detail}</span> : null}
     </div>
   )
 }

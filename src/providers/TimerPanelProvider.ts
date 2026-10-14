@@ -13,6 +13,8 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'cut-a-while.timerPanel';
 
   private webviewView: vscode.WebviewView | undefined;
+  private webviewReady = false;
+  private pendingOpenStats = false;
   private timer: TimerManager;
   private extensionUri: vscode.Uri;
 
@@ -22,13 +24,20 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
   }
 
   openStats() {
+    this.pendingOpenStats = true;
     if (!this.webviewView) return;
     try {
       this.webviewView.show?.(true);
-      this.post({ command: 'openStats' });
     } catch {
-      // Webview disposed — ignore
+      return;
     }
+    if (this.webviewReady) this.flushOpenStats();
+  }
+
+  private flushOpenStats() {
+    if (!this.pendingOpenStats || !this.webviewReady) return;
+    this.pendingOpenStats = false;
+    this.post({ command: 'openStats' });
   }
 
   resolveWebviewView(webviewView: vscode.WebviewView) {
@@ -69,7 +78,9 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           void this.timer.setTask(message.task).catch(() => {});
           break;
         case 'getState':
+          this.webviewReady = true;
           this.postState();
+          this.flushOpenStats();
           break;
         case 'getSettings':
           this.postSettings();
@@ -112,12 +123,16 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       if (e.affectsConfiguration('cut-a-while')) {
         this.postSettings();
       }
+      if (e.affectsConfiguration('cut-a-while.workDuration')) {
+        this.timer.syncIdleDuration();
+      }
     });
     webviewView.onDidDispose(() => {
       messageDisposable.dispose();
       stateDisposable.dispose();
       soundDisposable.dispose();
       configDisposable.dispose();
+      this.webviewReady = false;
       this.webviewView = undefined;
     });
     this.postState();

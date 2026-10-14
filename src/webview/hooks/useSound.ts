@@ -134,7 +134,3 @@ export async function playCycleSound(
   const resolved = isSoundTheme(theme) ? theme : 'bell'
   await THEMES[resolved][type]()
 }
-
-export function playThemeSound(theme: SoundTheme, type: 'work' | 'break' = 'break', enabled = true) {
-  void playCycleSound(theme, type, enabled)
-}

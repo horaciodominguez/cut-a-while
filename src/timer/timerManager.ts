@@ -154,6 +154,17 @@ export class TimerManager implements vscode.Disposable {
     };
   }
 
+  /** Idle and stopped show the next focus length. A running or paused timer keeps its countdown. */
+  syncIdleDuration() {
+    if (this.state.status !== 'idle' && this.state.status !== 'stopped') return;
+    const next = this.getConfig().workDuration;
+    if (this.state.timeLeft === next && this.state.totalTime === next && this.state.cycleType === 'work') return;
+    this.state.timeLeft = next;
+    this.state.totalTime = next;
+    this.state.cycleType = 'work';
+    this.emit();
+  }
+
   getState(): TimerState {
     return { ...this.state };
   }

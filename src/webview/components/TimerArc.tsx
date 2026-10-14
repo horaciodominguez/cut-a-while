@@ -3,7 +3,6 @@ interface TimerArcProps {
   totalTime: number
   stroke: string
   status: string
-  pulse?: boolean
 }
 
 const R = 100
@@ -28,7 +27,7 @@ function arcPath() {
   return `M ${start.x} ${start.y} A ${R} ${R} 0 1 1 ${end.x} ${end.y}`
 }
 
-export function TimerArc({ timeLeft, totalTime, stroke, status, pulse }: TimerArcProps) {
+export function TimerArc({ timeLeft, totalTime, stroke, status }: TimerArcProps) {
   const progress = totalTime > 0 ? timeLeft / totalTime : 0
   const clamped = Math.min(Math.max(progress, 0), 1)
   const offset = ARC_LENGTH * (1 - clamped)
@@ -42,11 +41,6 @@ export function TimerArc({ timeLeft, totalTime, stroke, status, pulse }: TimerAr
       height="200"
       viewBox="0 0 240 200"
       aria-hidden="true"
-      style={{
-        opacity: pulse ? 0.6 : 1,
-        transform: pulse ? 'scale(1.015)' : undefined,
-        transition: 'opacity 0.25s ease, transform 0.25s ease',
-      }}
     >
       <path
         d={arcPath()}
