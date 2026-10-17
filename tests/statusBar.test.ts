@@ -107,7 +107,8 @@ describe('StatusBarManager', () => {
   it('shows the idle clock without a highlighted background', () => {
     expect(item().text).toBe('$(watch) 25:00')
     expect(item().backgroundColor).toBeUndefined()
-    expect(item().command).toBe('cut-a-while.showPanel')
+    expect(item().command).toBe('cut-a-while.toggle')
+    expect(item().color).toBeUndefined()
     expect(item().tooltip).toBe(
       [
         'Cut a While — Focus',
@@ -115,7 +116,7 @@ describe('StatusBarManager', () => {
         'This cycle: 0',
         '4 until long break',
         '---',
-        'Click to open panel',
+        'Click to start/pause · Open panel from the Command Palette',
       ].join('\n'),
     )
   })
@@ -125,11 +126,12 @@ describe('StatusBarManager', () => {
     timer.start()
     expect(item().text).toBe('$(play-circle) 25:00')
     expect(item().backgroundColor).toEqual({ id: 'statusBarItem.prominentBackground' })
+    expect(item().color).toBeUndefined()
     expect(interval).not.toHaveBeenCalled()
 
     timer.pause()
     expect(item().text).toBe('$(debug-pause) 25:00')
-    expect(item().color).toBe('#ffb74d')
+    expect(item().color).toBeUndefined()
     expect(item().backgroundColor).toBeUndefined()
     expect(interval).not.toHaveBeenCalled()
     interval.mockRestore()
@@ -165,7 +167,7 @@ describe('StatusBarManager', () => {
         'This cycle: 4',
         'Long break',
         '---',
-        'Click to open panel',
+        'Click to start/pause · Open panel from the Command Palette',
       ].join('\n'),
     )
     expect(item().tooltip).not.toContain('Long break now!')

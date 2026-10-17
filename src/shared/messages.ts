@@ -32,7 +32,6 @@ export type HostToWebviewMessage =
       cycleType: CycleKind;
       completedSessions: number;
       currentTask: string;
-      streak: number;
       todayCount: number;
     }
   | {
@@ -48,6 +47,7 @@ export type HostToWebviewMessage =
         soundTheme: string;
         zenMode: boolean;
         accent: string;
+        statusBarAlignment: string;
         platform: string;
       };
     }

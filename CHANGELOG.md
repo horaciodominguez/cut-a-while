@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.7] - 2026-10-16
+
+### Changed
+
+- Status bar click starts or pauses the timer (open the panel from the Command Palette or Activity Bar)
+- Stop resets the clock to the next focus length instead of leaving a mid-break remnant
+- A paused break keeps Resume, Stop, and Start next focus
+- Completion toast only appears when the timer panel is hidden
+- Dismissing the auto-pause Resume prompt leaves the timer paused without asking again
+- Activity Bar overview is Open + Today (no streak). Status bar alignment lives in the Settings drawer
+- Removed unused file-focus hover tracking and the unused streak field from the panel protocol
+
+### Fixed
+
+- Drawers focus the first content control, not Close
+- Status bar uses theme colors only (no hard-coded state colors)
+- `setTask` emits a state update so the host and panel stay aligned
+
 ## [0.1.6] - 2026-10-13
 
 ### Changed

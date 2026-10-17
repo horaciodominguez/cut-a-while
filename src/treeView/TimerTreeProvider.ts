@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { calcStreak } from '../core/utils/streak.js';
 import { todayWorkSessions } from '../core/utils/time.js';
 import { TimerManager, type Session, type TimerState } from '../timer/timerManager.js';
 import { StorageManager } from '../storage/store.js';
@@ -73,15 +72,10 @@ export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>
     const sessions = this.getWorkSessions();
     const todaySessions = todayWorkSessions(sessions);
     const totalMinutes = todaySessions.reduce((sum, s) => sum + Math.round(s.duration / 60), 0);
-    const streak = calcStreak(sessions);
 
     const todayChildren: TimerTreeItem[] = [
       new TimerTreeItem('Pomodoros', vscode.TreeItemCollapsibleState.None, `${todaySessions.length}`, 'check'),
       new TimerTreeItem('Focus Time', vscode.TreeItemCollapsibleState.None, `${totalMinutes} min`, 'clock'),
-    ];
-
-    const streakChildren: TimerTreeItem[] = [
-      new TimerTreeItem('Current', vscode.TreeItemCollapsibleState.None, `${streak} day${streak !== 1 ? 's' : ''}`, 'flame'),
     ];
 
     return [
@@ -93,7 +87,6 @@ export class TimerTreeProvider implements vscode.TreeDataProvider<TimerTreeItem>
         { command: 'cut-a-while.showPanel', title: 'Open Timer Panel' },
       ),
       new TimerTreeItem('Today', vscode.TreeItemCollapsibleState.Expanded, undefined, 'calendar', undefined, todayChildren),
-      new TimerTreeItem('Streak', vscode.TreeItemCollapsibleState.Collapsed, undefined, 'dashboard', undefined, streakChildren),
     ];
   }
 

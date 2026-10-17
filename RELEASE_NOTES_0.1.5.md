@@ -7,7 +7,7 @@ The timer controls now match what they do, and the editor chrome is quieter.
 - Start / Pause pauses a break and resumes a paused session. Skipping a break is the panel button **Start next focus**
 - The task name stays through the break. **Today** counts pomodoros finished today; the dots show this cycle
 - One short notice when a cycle ends. Start, Pause, and Reset no longer add a toast
-- The status bar no longer blinks. The Activity Bar lists Open, today, and streak
+- The status bar no longer blinks. The Activity Bar lists Open and today
 - Removed the default `Ctrl+Shift+T` / `Cmd+Shift+T` shortcut so it no longer overrides Reopen Closed Editor
 
 See [CHANGELOG.md](./CHANGELOG.md) for the full list.

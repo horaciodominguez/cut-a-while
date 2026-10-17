@@ -33,10 +33,8 @@ export class AutoPauseManager implements vscode.Disposable {
           'Resume',
         ).then((action) => {
           this.awaitingResume = false;
-          if (action) {
-            this.wasRunning = false;
-            timer.resume();
-          }
+          this.wasRunning = false;
+          if (action) timer.resume();
         });
       }
     });

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { calcStreak } from '../core/utils/streak.js';
 import { todayWorkSessions } from '../core/utils/time.js';
 import {
   playHostCompletionSound,
@@ -21,6 +20,10 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
   constructor(extensionUri: vscode.Uri, timer: TimerManager) {
     this.extensionUri = extensionUri;
     this.timer = timer;
+  }
+
+  isPanelVisible(): boolean {
+    return !!this.webviewView?.visible;
   }
 
   openStats() {
@@ -186,7 +189,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       const state = this.timer.getState();
       const sessions = this.timer.getSessions();
       const todayCount = todayWorkSessions(sessions).length;
-      this.post({ command: 'stateUpdate', ...state, streak: calcStreak(sessions), todayCount });
+      this.post({ command: 'stateUpdate', ...state, todayCount });
     } catch {
       // Webview disposed — ignore
     }
@@ -209,6 +212,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
           soundTheme: config.get<string>('soundTheme', 'bell'),
           zenMode: config.get<boolean>('zenMode', false),
           accent: config.get<string>('theme.accent', 'blue'),
+          statusBarAlignment: config.get<string>('statusBarAlignment', 'right'),
           platform: process.platform,
         },
       });
@@ -309,6 +313,7 @@ export class TimerPanelProvider implements vscode.WebviewViewProvider {
       soundTheme: 'soundTheme',
       zenMode: 'zenMode',
       accent: 'theme.accent',
+      statusBarAlignment: 'statusBarAlignment',
     };
     return map[key] || key;
   }

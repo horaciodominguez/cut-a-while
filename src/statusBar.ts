@@ -10,14 +10,6 @@ const STATE_ICONS: Record<string, string> = {
   stopped: '$(stop-circle)',
 };
 
-const STATE_COLORS: Record<string, string> = {
-  idle: '',
-  running: '#4fc3f7',
-  paused: '#ffb74d',
-  break: '#81c784',
-  stopped: '#ef5350',
-};
-
 const PRIORITY = 100;
 
 export class StatusBarManager implements vscode.Disposable {
@@ -46,7 +38,7 @@ export class StatusBarManager implements vscode.Disposable {
 
   private createItem(alignment: vscode.StatusBarAlignment): vscode.StatusBarItem {
     const item = vscode.window.createStatusBarItem(alignment, PRIORITY);
-    item.command = 'cut-a-while.showPanel';
+    item.command = 'cut-a-while.toggle';
     item.text = '$(watch) 00:00';
     item.tooltip = 'Cut a While — Pomodoro Timer';
     return item;
@@ -71,10 +63,9 @@ export class StatusBarManager implements vscode.Disposable {
   private update(state: TimerState) {
     const timeFormatted = this.formatTime(state.timeLeft);
     const icon = STATE_ICONS[state.status] || '$(watch)';
-    const color = STATE_COLORS[state.status] || '';
 
     this.item.text = `${icon} ${timeFormatted}`;
-    this.item.color = color || undefined;
+    this.item.color = undefined;
     this.item.backgroundColor = state.status === 'running'
       ? new vscode.ThemeColor('statusBarItem.prominentBackground')
       : undefined;
@@ -92,7 +83,7 @@ export class StatusBarManager implements vscode.Disposable {
       `${timeFormatted} remaining\n` +
       `This cycle: ${sessions}\n` +
       `${untilLongBreak}\n` +
-      `---\nClick to open panel`;
+      `---\nClick to start/pause · Open panel from the Command Palette`;
   }
 
   private formatTime(seconds: number): string {

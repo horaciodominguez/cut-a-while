@@ -468,14 +468,15 @@ describe('TimerManager', () => {
     })
   })
 
-  it('stop keeps the cycle count and the task, and the next start is a full focus', async () => {
+  it('stop keeps the cycle count and the task, and shows the next focus length', async () => {
     timer.start('named')
     await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
     timer.stop()
     expect(timer.getState()).toMatchObject({
       status: 'stopped',
-      cycleType: 'break',
-      timeLeft: 5 * 60,
+      cycleType: 'work',
+      timeLeft: 25 * 60,
+      totalTime: 25 * 60,
       completedSessions: 1,
       currentTask: 'named',
     })
@@ -489,6 +490,28 @@ describe('TimerManager', () => {
       completedSessions: 1,
       currentTask: 'named',
     })
+  })
+
+  it('skipBreak works from a paused break', async () => {
+    timer.start('named')
+    await vi.advanceTimersByTimeAsync(25 * 60 * 1000)
+    timer.pause()
+    expect(timer.getState()).toMatchObject({ status: 'paused', cycleType: 'break' })
+    timer.skipBreak()
+    expect(timer.getState()).toMatchObject({
+      status: 'running',
+      cycleType: 'work',
+      timeLeft: 25 * 60,
+      currentTask: 'named',
+    })
+  })
+
+  it('setTask emits a state change', () => {
+    const listener = vi.fn()
+    const disposable = timer.onDidChangeState(listener)
+    void timer.setTask('emitted')
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ currentTask: 'emitted' }))
+    disposable.dispose()
   })
 
   it('reset clears the cycle counter and keeps saved sessions', async () => {

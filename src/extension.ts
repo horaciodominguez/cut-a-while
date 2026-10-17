@@ -5,7 +5,6 @@ import { StatusBarManager } from './statusBar.js';
 import { CommandsManager } from './commands.js';
 import { TimerPanelProvider } from './providers/TimerPanelProvider.js';
 import { TimerTreeProvider } from './treeView/TimerTreeProvider.js';
-import { FileFocusTracker } from './fileFocusTracker.js';
 import { ZenModeManager } from './zenModeManager.js';
 import { AutoPauseManager } from './autoPauseManager.js';
 import { ProjectFocusTracker } from './projectFocusTracker.js';
@@ -33,9 +32,6 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider('cut-a-while.timerTree', treeProvider),
   );
 
-  const focusTracker = new FileFocusTracker(timer, storage);
-  context.subscriptions.push(focusTracker);
-
   const zenMode = new ZenModeManager(timer);
   context.subscriptions.push(zenMode);
 
@@ -46,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(projectFocus);
 
   context.subscriptions.push(timer.onDidCompleteCycle((finished) => {
+    if (provider.isPanelVisible()) return;
     const interval = vscode.workspace.getConfiguration('cut-a-while').get<number>('longBreakInterval', 4);
     Notifications.info(completionNotice(finished, timer.getState(), interval));
   }));

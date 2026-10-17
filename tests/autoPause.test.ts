@@ -184,22 +184,22 @@ describe('AutoPauseManager', () => {
     expect(timer.getState().status).toBe('running')
   })
 
-  it('asks again on the next focus if Resume was dismissed', async () => {
+  it('stays paused after Resume is dismissed and does not ask again', async () => {
     const { Notifications } = await import('../src/notifications.js')
     const confirm = vi.mocked(Notifications.confirm)
     confirm.mockClear()
-    confirm.mockResolvedValueOnce(undefined).mockResolvedValueOnce('Resume')
+    confirm.mockResolvedValueOnce(undefined)
 
     timer.start()
     blur()
     focus()
     await Promise.resolve()
     expect(timer.getState().status).toBe('paused')
+    expect(confirm).toHaveBeenCalledTimes(1)
 
     focus()
-    await vi.waitFor(() => {
-      expect(timer.getState().status).toBe('running')
-    })
-    expect(Notifications.confirm).toHaveBeenCalledTimes(2)
+    await Promise.resolve()
+    expect(timer.getState().status).toBe('paused')
+    expect(confirm).toHaveBeenCalledTimes(1)
   })
 })

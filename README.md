@@ -18,16 +18,16 @@ External timers break concentration. Cut a While keeps work / break cycles, task
 ## Features
 
 - **Pomodoro cycles** — work, short break, and long break (defaults 25 / 5 / 15)
-- **Status bar** — live countdown; click to open the panel
-- **Activity Bar** — overview (streak, today, time left). The timer itself is the **Timer Panel**
-- **Timer panel** — editorial UI with progress arc, session dots, and streak
+- **Status bar** — live countdown; click to start or pause
+- **Activity Bar** — overview (open panel + today’s count). The timer itself is the **Timer Panel**
+- **Timer panel** — progress arc, session dots, tasks, stats, and settings
 - **Tasks** — chips select a task; **Start** begins the session. The task stays editable while focusing
 - **Stats** — today / week / totals, 7-day chart, top tasks, project focus time
 - **Sounds** — six completion themes (bell, digital, nature, zen, soft, classic)
 - **Accent color** — blue, purple, green, pink, orange, or teal
 - **Zen Mode** — optional full focus when a work session starts
 - **Auto-pause** — pause when VS Code loses window focus; prompt to resume
-- **Focus tracking** — hover a file to see accumulated focus time; project totals in stats
+- **Project focus** — folder totals in stats
 - **Persistent state** — timer progress survives window reloads
 
 ## Install
@@ -42,7 +42,7 @@ Search **Cut a While** in Extensions, install by ID `horaciodominguez.cut-a-whil
 
 ### GitHub Release (`.vsix`)
 
-Download `cut-a-while-0.1.6.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
+Download `cut-a-while-0.1.7.vsix` from the [latest GitHub Release](https://github.com/horaciodominguez/cut-a-while/releases/latest), then in VS Code: **Extensions → … → Install from VSIX…**
 
 ### From source
 
@@ -52,20 +52,20 @@ npm run build
 npm run package
 ```
 
-Then install the generated `cut-a-while-0.1.6.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
+Then install the generated `cut-a-while-0.1.7.vsix` as above, or press **F5** after `npm run build` to run an Extension Development Host.
 
 ## Usage
 
-1. Open **Cut a While** in the Activity Bar and choose **Open Timer Panel**. The sidebar shows today’s count and your streak; the timer UI is the bottom **Timer Panel**. You can also click the status-bar countdown.
+1. Open **Cut a While** in the Activity Bar and choose **Open Timer Panel**. The sidebar shows today’s count; the timer UI is the bottom **Timer Panel**. Click the status-bar countdown to start or pause.
 2. Pick a task chip or type what you’re working on. A chip only selects the task. Starting a session does not add a task to the list.
 3. Press **Start**. You can edit the task while the session is running. The same task stays through the break.
-4. When focus ends, the break starts and a short notice appears. From the panel you can pause, stop, or start the next focus.
+4. When focus ends, the break starts. A short notice appears only if the timer panel is hidden. From the panel you can pause, stop, or start the next focus.
 
 ### Commands
 
 | Command | Default shortcut |
 |---------|------------------|
-| **Cut a While: Start / Pause Timer** | None. Assign one in Keyboard Shortcuts. `Ctrl+Shift+T` / `Cmd+Shift+T` stays **Reopen Closed Editor**. On a break this pauses; it does not skip the break. |
+| **Cut a While: Start / Pause Timer** | Status bar click. Assign a key in Keyboard Shortcuts if you want one. `Ctrl+Shift+T` / `Cmd+Shift+T` stays **Reopen Closed Editor**. On a break this pauses; it does not skip the break. |
 | **Cut a While: Show Timer Panel** | — |
 | **Cut a While: Reset Timer** | — |
 | **Cut a While: Show Statistics** | — |
@@ -94,10 +94,10 @@ Most of these are also editable from the in-panel **Settings** drawer.
 
 ## Limits
 
-- The Activity Bar view is an **overview**. Start, pause, and settings live in the **Timer Panel** (bottom) or via **Cut a While: Show Timer Panel**.
-- **Auto-pause** (`cut-a-while.autoPause`, default on) pauses focus and breaks when the window loses focus, then asks to resume.
+- The Activity Bar view is an **overview** (open panel + today). Start, pause, and settings live in the **Timer Panel** (bottom), the status bar, or via **Cut a While: Show Timer Panel**.
+- **Auto-pause** (`cut-a-while.autoPause`, default on) pauses focus and breaks when the window loses focus, then asks once to resume.
 - **Zen Mode** turns on for a running focus session and turns off on pause, break, or stop.
-- On **Windows**, completion and theme preview use system beeps (one pattern per theme). On other platforms, the panel plays Web Audio when it is visible.
+- On **Windows**, completion and theme preview use system beeps (one pattern per theme). On **macOS**, host completion uses one system sound. On **Linux**, completion sound needs the panel visible.
 - Task chips **select** a task. The session starts only when you press **Start**.
 
 ## Architecture

@@ -198,7 +198,9 @@ function App() {
 
   const pendingTodos = todos.filter((t) => !t.done)
   const isBreak = state.cycleType === 'break'
-  const isActive = state.status === 'running' || state.status === 'break' || (state.status === 'paused' && isBreak)
+  const breakPaused = state.status === 'paused' && isBreak
+  const onBreak = state.status === 'break' || breakPaused
+  const isActive = state.status === 'running' || state.status === 'break' || breakPaused
   const timeStr = formatSecondsToTime(state.timeLeft)
   const accentHex = accentColor(accent)
   const phaseColor = isBreak ? 'var(--break)' : accentHex
@@ -277,11 +279,11 @@ function App() {
           </div>
         )}
 
-        {state.status === 'break' && state.currentTask && (
+        {onBreak && state.currentTask && (
           <p className="task-label">{state.currentTask}</p>
         )}
 
-        {state.status !== 'break' && (
+        {!onBreak && (
           <input
             ref={taskInputRef}
             type="text"
@@ -325,7 +327,7 @@ function App() {
               </button>
             </>
           )}
-          {state.status === 'paused' && (
+          {state.status === 'paused' && !isBreak && (
             <>
               <button className="btn-primary" onClick={() => send({ command: 'resume' })}>
                 <IconPlay /> Resume
@@ -339,6 +341,19 @@ function App() {
             <>
               <button className="btn-primary" onClick={() => send({ command: 'pause' })}>
                 <IconPause /> Pause
+              </button>
+              <button className="btn-ghost" onClick={confirmStop}>
+                <IconStop /> Stop
+              </button>
+              <button className="btn-ghost" onClick={() => send({ command: 'skipBreak' })}>
+                <IconSkip /> Start next focus
+              </button>
+            </>
+          )}
+          {breakPaused && (
+            <>
+              <button className="btn-primary" onClick={() => send({ command: 'resume' })}>
+                <IconPlay /> Resume
               </button>
               <button className="btn-ghost" onClick={confirmStop}>
                 <IconStop /> Stop

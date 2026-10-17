@@ -245,9 +245,12 @@ export class TimerManager implements vscode.Disposable {
 
   stop() {
     if (this.completing) return;
-    this.syncTimeLeftFromWallClock();
-    this.state.status = 'stopped';
     this.stopTick();
+    const config = this.getConfig();
+    this.state.status = 'stopped';
+    this.state.cycleType = 'work';
+    this.state.timeLeft = config.workDuration;
+    this.state.totalTime = config.workDuration;
     this.emit();
   }
 
@@ -268,11 +271,15 @@ export class TimerManager implements vscode.Disposable {
 
   async setTask(task: string) {
     this.state.currentTask = task;
-    await this.saveState();
+    this.emit();
   }
 
   skipBreak() {
-    if (this.completing || this.state.status !== 'break') return;
+    if (this.completing) return;
+    const onBreak =
+      this.state.cycleType === 'break' &&
+      (this.state.status === 'break' || this.state.status === 'paused');
+    if (!onBreak) return;
     const config = this.getConfig();
     this.state.timeLeft = config.workDuration;
     this.state.totalTime = config.workDuration;

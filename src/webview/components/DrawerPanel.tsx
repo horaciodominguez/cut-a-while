@@ -25,9 +25,9 @@ export function DrawerPanel({ title, open, onClose, children }: DrawerPanelProps
   useEffect(() => {
     if (open && !wasOpenRef.current) {
       previouslyFocused.current = document.activeElement as HTMLElement | null
-      const panel = panelRef.current
-      const first = panel?.querySelector(FOCUSABLE) as HTMLElement | null
-      // preventScroll avoids jumping the drawer body to the top
+      const content = panelRef.current?.querySelector('.drawer-content')
+      const first = content?.querySelector(FOCUSABLE) as HTMLElement | null
+      // Prefer the first control in the body, not Close.
       first?.focus({ preventScroll: true })
       if (bodyRef.current) bodyRef.current.scrollTop = 0
     }

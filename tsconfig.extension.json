@@ -26,7 +26,6 @@
     "src/commands.ts",
     "src/notifications.ts",
     "src/autoPauseManager.ts",
-    "src/fileFocusTracker.ts",
     "src/projectFocusTracker.ts",
     "src/zenModeManager.ts",
     "src/hostSound.ts",

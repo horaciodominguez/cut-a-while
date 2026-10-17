@@ -96,7 +96,7 @@ describe('TimerTreeProvider', () => {
     return labels
   }
 
-  it('lists open, today, and streak, and does not repeat the clock', async () => {
+  it('lists open and today, and does not repeat the clock or streak', async () => {
     const yesterday = new Date(2026, 9, 5, 18, 0, 0).getTime()
     const today = new Date(2026, 9, 6, 9, 0, 0).getTime()
     mount([
@@ -106,7 +106,7 @@ describe('TimerTreeProvider', () => {
     ])
 
     const roots = await provider.getChildren() as TreeNode[]
-    expect(roots.map((item) => item.label)).toEqual(['Open Timer Panel', 'Today', 'Streak'])
+    expect(roots.map((item) => item.label)).toEqual(['Open Timer Panel', 'Today'])
     expect(roots[0].command?.command).toBe('cut-a-while.showPanel')
     expect(roots[0].description).toBe('The timer UI is the bottom panel')
 
@@ -116,13 +116,11 @@ describe('TimerTreeProvider', () => {
       ['Focus Time', '10 min'],
     ])
 
-    const streakChildren = await provider.getChildren(roots[2] as never) as TreeNode[]
-    expect(streakChildren.map((item) => item.label)).toEqual(['Current'])
-
     const labels = await flatLabels()
     expect(labels).not.toContain('Status')
     expect(labels).not.toContain('Time Left')
     expect(labels).not.toContain('Cycle')
+    expect(labels).not.toContain('Streak')
     expect(labels.join(' ')).not.toContain('Session count')
     expect(labels.join(' ')).not.toMatch(/Skip break|Start|Pause/)
   })

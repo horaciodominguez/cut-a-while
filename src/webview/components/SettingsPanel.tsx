@@ -14,6 +14,7 @@ interface ExtensionSettings {
   soundTheme: string
   zenMode: boolean
   accent: string
+  statusBarAlignment: string
   platform?: string
 }
 
@@ -53,6 +54,7 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
     soundTheme: 'bell',
     zenMode: false,
     accent: 'blue',
+    statusBarAlignment: 'right',
     platform: undefined,
   })
 
@@ -116,6 +118,34 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
           value={settings.zenMode}
           onChange={(v) => updateSetting('zenMode', v)}
         />
+        <div className="flex items-center justify-between gap-3">
+          <span className="min-w-0">
+            <span className="block text-xs" style={{ color: 'var(--text-secondary)' }}>Status bar</span>
+            <span className="block text-[10px] mt-0.5 leading-snug" style={{ color: 'var(--text-tertiary)' }}>
+              Left or right side of the status bar.
+            </span>
+          </span>
+          <div className="flex gap-1 shrink-0">
+            {(['left', 'right'] as const).map((side) => (
+              <button
+                key={side}
+                type="button"
+                aria-pressed={settings.statusBarAlignment === side}
+                onClick={() => updateSetting('statusBarAlignment', side)}
+                className="text-[10px] px-2.5 py-1 rounded font-medium cursor-pointer border capitalize"
+                style={{
+                  background: settings.statusBarAlignment === side ? 'var(--accent-soft)' : 'transparent',
+                  color: settings.statusBarAlignment === side ? 'var(--accent)' : 'var(--text-secondary)',
+                  borderColor: settings.statusBarAlignment === side
+                    ? 'color-mix(in srgb, var(--accent) 35%, transparent)'
+                    : 'var(--border-subtle)',
+                }}
+              >
+                {side}
+              </button>
+            ))}
+          </div>
+        </div>
       </Section>
 
       <Section title="Sound">
@@ -128,6 +158,16 @@ export function SettingsPanel({ open, onClose, onAccentChange }: SettingsPanelPr
         {settings.platform === 'win32' && (
           <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
             On Windows, preview and completion use matching system beeps per theme
+          </p>
+        )}
+        {settings.platform === 'darwin' && (
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            On macOS, host completion uses one system sound; theme preview needs the panel visible
+          </p>
+        )}
+        {settings.platform === 'linux' && (
+          <p className="text-[10px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            On Linux, completion sound plays when the timer panel is visible
           </p>
         )}
         <div className="flex flex-wrap gap-1.5 mt-2">
